@@ -1,17 +1,18 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
   <title>Draft 2025 - MLB HR & RBI Leaderboard</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
   <style>
     table { width: 100%; border-collapse: collapse; margin-top: 1rem; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
-    thead { background: #e0e0e0; color: #333; }
+    thead { background: #f0f0f0; color: #222; }
     th, td { padding: 0.75rem; text-align: center; border-bottom: 1px solid #ddd; }
-    th:first-child, td:first-child { font-weight: bold; color: #0366d6; } /* Bold Pick column */
-    tbody tr:nth-child(odd) { background: #f9f9f9; }
-    tbody tr:nth-child(even) { background: #efefef; }
+    th:first-child, td:first-child { font-weight: bold; color: #0366d6; width: 60px; }
+    tbody tr:nth-child(odd) { background: #ffffff; }
+    tbody tr:nth-child(even) { background: #f7f7f7; }
     a.player-link { text-decoration: none; color: inherit; font-weight: bold; }
     a.player-link:hover { text-decoration: underline; color: #0366d6; }
     .highlight { background: #c6f6d5 !important; transition: background 0.5s ease; }
@@ -65,8 +66,9 @@
 
     let simulationTarget = null;
     let simInterval = null;
+    let lastResults = [];
 
-    async function loadStats() {
+    async function fetchStats() {
       const results = [];
       for (const p of players) {
         try {
@@ -80,7 +82,13 @@
           results.push({ name: p.name, assoc: p.assoc, hr: 0, rbi: 0, espn: p.espn });
         }
       }
+      return results;
+    }
+
+    async function loadStats() {
+      const results = await fetchStats();
       renderLeaderboard(results);
+      lastResults = results;
     }
 
     function renderLeaderboard(results, highlightName=null) {
@@ -97,7 +105,9 @@
         const tr = document.createElement("tr");
         tr.setAttribute("data-name", p.name);
         tr.innerHTML = `<td>${idx+1}</td><td><a class='player-link' href='${p.espn}' target='_blank'>${p.name}</a></td><td>${p.assoc}</td><td class='hr'>${p.hr}</td><td>${p.rbi}</td>`;
-        if (highlightName && p.name.toLowerCase().includes(highlightName)) {
+        // highlight if simulation target OR stats changed
+        if ((highlightName && p.name.toLowerCase().includes(highlightName)) ||
+            (lastResults.find(l => l.name === p.name && (l.hr !== p.hr || l.rbi !== p.rbi)))) {
           tr.classList.add("highlight");
           setTimeout(() => tr.classList.remove("highlight"), 1500);
         }
@@ -138,6 +148,7 @@
             espn: players.find(p => p.name === r.getAttribute("data-name")).espn
           }));
           renderLeaderboard(updated, target);
+          lastResults = updated;
         }
       }, 8000);
     }
@@ -155,6 +166,13 @@
         document.getElementById("countdown").innerText = `${days}d : ${hours}h : ${minutes}m : ${seconds}s`;
       }, 1000);
     }
+
+    // periodic refresh every 60s
+    setInterval(async () => {
+      const results = await fetchStats();
+      renderLeaderboard(results);
+      lastResults = results;
+    }, 60000);
 
     const params = new URLSearchParams(window.location.search);
     if (params.has("simulate")) {
