@@ -9,6 +9,7 @@
     table { width: 100%; border-collapse: collapse; margin-top: 1rem; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
     thead { background: #e0e0e0; color: #333; }
     th, td { padding: 0.75rem; text-align: center; border-bottom: 1px solid #ddd; }
+    th:first-child, td:first-child { font-weight: bold; color: #0366d6; } /* Bold Pick column */
     tbody tr:nth-child(odd) { background: #f9f9f9; }
     tbody tr:nth-child(even) { background: #efefef; }
     a.player-link { text-decoration: none; color: inherit; font-weight: bold; }
@@ -34,7 +35,7 @@
   <main class="container">
     <table>
       <thead>
-        <tr><th>Rank</th><th>Player</th><th>Associated</th><th>HR</th><th>RBI</th></tr>
+        <tr><th>Pick</th><th>Player</th><th>Associated</th><th>HR</th><th>RBI</th></tr>
       </thead>
       <tbody id="leaderboard">
         <tr><td colspan="5">Loading stats...</td></tr>
@@ -48,18 +49,18 @@
 
   <script>
     const players = [
-      { name: "Kyle Schwarber", assoc: "Jeff", url: "https://statsapi.mlb.com/api/v1/people/656941/stats?stats=byDateRange&group=hitting&type=statSplits&startDate=2025-08-01&endDate=2025-08-30" },
-      { name: "Pete Alonso", assoc: "Noah", url: "https://statsapi.mlb.com/api/v1/people/624413/stats?stats=byDateRange&group=hitting&type=statSplits&startDate=2025-08-01&endDate=2025-08-30" },
-      { name: "Juan Soto", assoc: "LeFev", url: "https://statsapi.mlb.com/api/v1/people/665742/stats?stats=byDateRange&group=hitting&type=statSplits&startDate=2025-08-01&endDate=2025-08-30" },
-      { name: "Shohei Ohtani", assoc: "Grant", url: "https://statsapi.mlb.com/api/v1/people/660271/stats?stats=byDateRange&group=hitting&type=statSplits&startDate=2025-08-01&endDate=2025-08-30" },
-      { name: "Cal Raleigh", assoc: "Nolan", url: "https://statsapi.mlb.com/api/v1/people/663728/stats?stats=byDateRange&group=hitting&type=statSplits&startDate=2025-08-01&endDate=2025-08-30" },
-      { name: "Taylor Ward", assoc: "Diego", url: "https://statsapi.mlb.com/api/v1/people/621493/stats?stats=byDateRange&group=hitting&type=statSplits&startDate=2025-08-01&endDate=2025-08-30" },
-      { name: "Cody Bellinger", assoc: "Cam", url: "https://statsapi.mlb.com/api/v1/people/641355/stats?stats=byDateRange&group=hitting&type=statSplits&startDate=2025-08-01&endDate=2025-08-30" },
-      { name: "Riley Greene", assoc: "Troy", url: "https://statsapi.mlb.com/api/v1/people/682985/stats?stats=byDateRange&group=hitting&type=statSplits&startDate=2025-08-01&endDate=2025-08-30" },
-      { name: "Spencer Torkelson", assoc: "Ryan H", url: "https://statsapi.mlb.com/api/v1/people/679529/stats?stats=byDateRange&group=hitting&type=statSplits&startDate=2025-08-01&endDate=2025-08-30" },
-      { name: "Brent Rooker", assoc: "Will", url: "https://statsapi.mlb.com/api/v1/people/667670/stats?stats=byDateRange&group=hitting&type=statSplits&startDate=2025-08-01&endDate=2025-08-30" },
-      { name: "Seiya Suzuki", assoc: "Ted", url: "https://statsapi.mlb.com/api/v1/people/673548/stats?stats=byDateRange&group=hitting&type=statSplits&startDate=2025-08-01&endDate=2025-08-30" },
-      { name: "Manny Machado", assoc: "Buck", url: "https://statsapi.mlb.com/api/v1/people/592518/stats?stats=byDateRange&group=hitting&type=statSplits&startDate=2025-08-01&endDate=2025-08-30" }
+      { name: "Kyle Schwarber", assoc: "Jeff", espn: "https://www.espn.com/mlb/player/gamelog/_/id/33712/kyle-schwarber", url: "https://statsapi.mlb.com/api/v1/people/656941/stats?stats=byDateRange&group=hitting&type=statSplits&startDate=2025-08-01&endDate=2025-08-30" },
+      { name: "Pete Alonso", assoc: "Noah", espn: "https://www.espn.com/mlb/player/gamelog/_/id/37498/pete-alonso", url: "https://statsapi.mlb.com/api/v1/people/624413/stats?stats=byDateRange&group=hitting&type=statSplits&startDate=2025-08-01&endDate=2025-08-30" },
+      { name: "Juan Soto", assoc: "LeFev", espn: "https://www.espn.com/mlb/player/gamelog/_/id/36969/juan-soto", url: "https://statsapi.mlb.com/api/v1/people/665742/stats?stats=byDateRange&group=hitting&type=statSplits&startDate=2025-08-01&endDate=2025-08-30" },
+      { name: "Shohei Ohtani", assoc: "Grant", espn: "https://www.espn.com/mlb/player/gamelog/_/id/39832/shohei-ohtani", url: "https://statsapi.mlb.com/api/v1/people/660271/stats?stats=byDateRange&group=hitting&type=statSplits&startDate=2025-08-01&endDate=2025-08-30" },
+      { name: "Cal Raleigh", assoc: "Nolan", espn: "https://www.espn.com/mlb/player/gamelog/_/id/41292/cal-raleigh", url: "https://statsapi.mlb.com/api/v1/people/663728/stats?stats=byDateRange&group=hitting&type=statSplits&startDate=2025-08-01&endDate=2025-08-30" },
+      { name: "Taylor Ward", assoc: "Diego", espn: "https://www.espn.com/mlb/player/gamelog/_/id/34923/taylor-ward", url: "https://statsapi.mlb.com/api/v1/people/621493/stats?stats=byDateRange&group=hitting&type=statSplits&startDate=2025-08-01&endDate=2025-08-30" },
+      { name: "Cody Bellinger", assoc: "Cam", espn: "https://www.espn.com/mlb/player/gamelog/_/id/33912/cody-bellinger", url: "https://statsapi.mlb.com/api/v1/people/641355/stats?stats=byDateRange&group=hitting&type=statSplits&startDate=2025-08-01&endDate=2025-08-30" },
+      { name: "Riley Greene", assoc: "Troy", espn: "https://www.espn.com/mlb/player/gamelog/_/id/42179/riley-greene", url: "https://statsapi.mlb.com/api/v1/people/682985/stats?stats=byDateRange&group=hitting&type=statSplits&startDate=2025-08-01&endDate=2025-08-30" },
+      { name: "Spencer Torkelson", assoc: "Ryan H", espn: "https://www.espn.com/mlb/player/gamelog/_/id/4424286/spencer-torkelson", url: "https://statsapi.mlb.com/api/v1/people/679529/stats?stats=byDateRange&group=hitting&type=statSplits&startDate=2025-08-01&endDate=2025-08-30" },
+      { name: "Brent Rooker", assoc: "Will", espn: "https://www.espn.com/mlb/player/gamelog/_/id/40926/brent-rooker", url: "https://statsapi.mlb.com/api/v1/people/667670/stats?stats=byDateRange&group=hitting&type=statSplits&startDate=2025-08-01&endDate=2025-08-30" },
+      { name: "Seiya Suzuki", assoc: "Ted", espn: "https://www.espn.com/mlb/player/gamelog/_/id/4142424/seiya-suzuki", url: "https://statsapi.mlb.com/api/v1/people/673548/stats?stats=byDateRange&group=hitting&type=statSplits&startDate=2025-08-01&endDate=2025-08-30" },
+      { name: "Manny Machado", assoc: "Buck", espn: "https://www.espn.com/mlb/player/gamelog/_/id/31097/manny-machado", url: "https://statsapi.mlb.com/api/v1/people/592518/stats?stats=byDateRange&group=hitting&type=statSplits&startDate=2025-08-01&endDate=2025-08-30" }
     ];
 
     let simulationTarget = null;
@@ -74,9 +75,9 @@
           const splits = data.stats[0]?.splits[0]?.stat || {};
           const hr = parseInt(splits.homeRuns || 0);
           const rbi = parseInt(splits.rbi || 0);
-          results.push({ name: p.name, assoc: p.assoc, hr, rbi });
+          results.push({ name: p.name, assoc: p.assoc, hr, rbi, espn: p.espn });
         } catch (err) {
-          results.push({ name: p.name, assoc: p.assoc, hr: 0, rbi: 0 });
+          results.push({ name: p.name, assoc: p.assoc, hr: 0, rbi: 0, espn: p.espn });
         }
       }
       renderLeaderboard(results);
@@ -95,7 +96,7 @@
       results.forEach((p, idx) => {
         const tr = document.createElement("tr");
         tr.setAttribute("data-name", p.name);
-        tr.innerHTML = `<td>${idx+1}</td><td>${p.name}</td><td>${p.assoc}</td><td class='hr'>${p.hr}</td><td>${p.rbi}</td>`;
+        tr.innerHTML = `<td>${idx+1}</td><td><a class='player-link' href='${p.espn}' target='_blank'>${p.name}</a></td><td>${p.assoc}</td><td class='hr'>${p.hr}</td><td>${p.rbi}</td>`;
         if (highlightName && p.name.toLowerCase().includes(highlightName)) {
           tr.classList.add("highlight");
           setTimeout(() => tr.classList.remove("highlight"), 1500);
@@ -133,7 +134,8 @@
             name: r.getAttribute("data-name"),
             assoc: r.children[2].textContent,
             hr: parseInt(r.children[3].textContent),
-            rbi: parseInt(r.children[4].textContent)
+            rbi: parseInt(r.children[4].textContent),
+            espn: players.find(p => p.name === r.getAttribute("data-name")).espn
           }));
           renderLeaderboard(updated, target);
         }
