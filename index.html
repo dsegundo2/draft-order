@@ -6,64 +6,22 @@
   <title>Draft 2025 - MLB HR & RBI Leaderboard</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
   <style>
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 1rem;
-      border-radius: 8px;
-      overflow: hidden;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    }
-
-    thead {
-      background: #e0e0e0;
-      color: #333;
-    }
-
-    th, td {
-      padding: 0.75rem;
-      text-align: center;
-      border-bottom: 1px solid #ddd;
-    }
-
-    tbody tr:nth-child(odd) {
-      background: #f9f9f9;
-    }
-
-    tbody tr:nth-child(even) {
-      background: #efefef;
-    }
-
-    tbody tr:hover {
-      background: #dbeafe;
-      transition: background 0.2s ease;
-    }
-
+    table { width: 100%; border-collapse: collapse; margin-top: 1rem; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+    thead { background: #e0e0e0; color: #333; }
+    th, td { padding: 0.75rem; text-align: center; border-bottom: 1px solid #ddd; }
+    tbody tr:nth-child(odd) { background: #f9f9f9; }
+    tbody tr:nth-child(even) { background: #efefef; }
     a.player-link { text-decoration: none; color: inherit; font-weight: bold; }
     a.player-link:hover { text-decoration: underline; color: #0366d6; }
-
-    #countdown-block {
-      background: linear-gradient(135deg, #0366d6, #4cafef);
-      border-radius: 12px;
-      padding: 1rem 2rem;
-      display: inline-block;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-      margin-top: 0.5rem;
-      color: white;
-    }
-
-    #countdown {
-      font-size: 1.75rem;
-      font-weight: bold;
-      color: #fff;
-      margin: 0;
-      letter-spacing: 1px;
-    }
+    .highlight { background: #c6f6d5 !important; transition: background 0.5s ease; }
+    #countdown-block { background: linear-gradient(135deg, #0366d6, #4cafef); border-radius: 12px; padding: 1rem 2rem; display: inline-block; box-shadow: 0 2px 8px rgba(0,0,0,0.2); margin-top: 0.5rem; color: white; }
+    #countdown { font-size: 1.75rem; font-weight: bold; color: #fff; margin: 0; letter-spacing: 1px; }
+    tbody tr { transition: transform 0.6s ease; }
   </style>
 </head>
 <body>
   <nav class="container-fluid">
-    <ul><li><strong>⚾ Draft 2025</strong></li></ul>
+    <ul><li><a href="index.html"><strong>⚾ Draft 2025</strong></a></li></ul>
   </nav>
 
   <section class="container" style="text-align: center; margin-top: 1rem;">
@@ -76,7 +34,7 @@
   <main class="container">
     <table>
       <thead>
-        <tr><th>Pick</th><th>Player</th><th>Manager</th><th>HR</th><th>RBI</th></tr>
+        <tr><th>Rank</th><th>Player</th><th>Associated</th><th>HR</th><th>RBI</th></tr>
       </thead>
       <tbody id="leaderboard">
         <tr><td colspan="5">Loading stats...</td></tr>
@@ -90,19 +48,22 @@
 
   <script>
     const players = [
-      { name: "Kyle Schwarber", assoc: "Jeff", espn: "https://www.espn.com/mlb/player/gamelog/_/id/33712/kyle-schwarber", url: "https://statsapi.mlb.com/api/v1/people/656941/stats?stats=byDateRange&group=hitting&type=statSplits&startDate=2025-08-01&endDate=2025-08-30" },
-      { name: "Pete Alonso", assoc: "Noah", espn: "https://www.espn.com/mlb/player/gamelog/_/id/37498/pete-alonso", url: "https://statsapi.mlb.com/api/v1/people/624413/stats?stats=byDateRange&group=hitting&type=statSplits&startDate=2025-08-01&endDate=2025-08-30" },
-      { name: "Juan Soto", assoc: "LeFev", espn: "https://www.espn.com/mlb/player/gamelog/_/id/36969/juan-soto", url: "https://statsapi.mlb.com/api/v1/people/665742/stats?stats=byDateRange&group=hitting&type=statSplits&startDate=2025-08-01&endDate=2025-08-30" },
-      { name: "Shohei Ohtani", assoc: "Grant", espn: "https://www.espn.com/mlb/player/gamelog/_/id/39832/shohei-ohtani", url: "https://statsapi.mlb.com/api/v1/people/660271/stats?stats=byDateRange&group=hitting&type=statSplits&startDate=2025-08-01&endDate=2025-08-30" },
-      { name: "Cal Raleigh", assoc: "Nolan", espn: "https://www.espn.com/mlb/player/gamelog/_/id/41292/cal-raleigh", url: "https://statsapi.mlb.com/api/v1/people/663728/stats?stats=byDateRange&group=hitting&type=statSplits&startDate=2025-08-01&endDate=2025-08-30" },
-      { name: "Taylor Ward", assoc: "Diego", espn: "https://www.espn.com/mlb/player/gamelog/_/id/34923/taylor-ward", url: "https://statsapi.mlb.com/api/v1/people/621493/stats?stats=byDateRange&group=hitting&type=statSplits&startDate=2025-08-01&endDate=2025-08-30" },
-      { name: "Cody Bellinger", assoc: "Cam", espn: "https://www.espn.com/mlb/player/gamelog/_/id/33912/cody-bellinger", url: "https://statsapi.mlb.com/api/v1/people/641355/stats?stats=byDateRange&group=hitting&type=statSplits&startDate=2025-08-01&endDate=2025-08-30" },
-      { name: "Riley Greene", assoc: "Troy", espn: "https://www.espn.com/mlb/player/gamelog/_/id/42179/riley-greene", url: "https://statsapi.mlb.com/api/v1/people/682985/stats?stats=byDateRange&group=hitting&type=statSplits&startDate=2025-08-01&endDate=2025-08-30" },
-      { name: "Spencer Torkelson", assoc: "Ryan H", espn: "https://www.espn.com/mlb/player/gamelog/_/id/4424286/spencer-torkelson", url: "https://statsapi.mlb.com/api/v1/people/679529/stats?stats=byDateRange&group=hitting&type=statSplits&startDate=2025-08-01&endDate=2025-08-30" },
-      { name: "Brent Rooker", assoc: "Will", espn: "https://www.espn.com/mlb/player/gamelog/_/id/40926/brent-rooker", url: "https://statsapi.mlb.com/api/v1/people/667670/stats?stats=byDateRange&group=hitting&type=statSplits&startDate=2025-08-01&endDate=2025-08-30" },
-      { name: "Seiya Suzuki", assoc: "Ted", espn: "https://www.espn.com/mlb/player/gamelog/_/id/4142424/seiya-suzuki", url: "https://statsapi.mlb.com/api/v1/people/673548/stats?stats=byDateRange&group=hitting&type=statSplits&startDate=2025-08-01&endDate=2025-08-30" },
-      { name: "Manny Machado", assoc: "Buck", espn: "https://www.espn.com/mlb/player/gamelog/_/id/31097/manny-machado", url: "https://statsapi.mlb.com/api/v1/people/592518/stats?stats=byDateRange&group=hitting&type=statSplits&startDate=2025-08-01&endDate=2025-08-30" }
+      { name: "Kyle Schwarber", assoc: "Jeff", url: "https://statsapi.mlb.com/api/v1/people/656941/stats?stats=byDateRange&group=hitting&type=statSplits&startDate=2025-08-01&endDate=2025-08-30" },
+      { name: "Pete Alonso", assoc: "Noah", url: "https://statsapi.mlb.com/api/v1/people/624413/stats?stats=byDateRange&group=hitting&type=statSplits&startDate=2025-08-01&endDate=2025-08-30" },
+      { name: "Juan Soto", assoc: "LeFev", url: "https://statsapi.mlb.com/api/v1/people/665742/stats?stats=byDateRange&group=hitting&type=statSplits&startDate=2025-08-01&endDate=2025-08-30" },
+      { name: "Shohei Ohtani", assoc: "Grant", url: "https://statsapi.mlb.com/api/v1/people/660271/stats?stats=byDateRange&group=hitting&type=statSplits&startDate=2025-08-01&endDate=2025-08-30" },
+      { name: "Cal Raleigh", assoc: "Nolan", url: "https://statsapi.mlb.com/api/v1/people/663728/stats?stats=byDateRange&group=hitting&type=statSplits&startDate=2025-08-01&endDate=2025-08-30" },
+      { name: "Taylor Ward", assoc: "Diego", url: "https://statsapi.mlb.com/api/v1/people/621493/stats?stats=byDateRange&group=hitting&type=statSplits&startDate=2025-08-01&endDate=2025-08-30" },
+      { name: "Cody Bellinger", assoc: "Cam", url: "https://statsapi.mlb.com/api/v1/people/641355/stats?stats=byDateRange&group=hitting&type=statSplits&startDate=2025-08-01&endDate=2025-08-30" },
+      { name: "Riley Greene", assoc: "Troy", url: "https://statsapi.mlb.com/api/v1/people/682985/stats?stats=byDateRange&group=hitting&type=statSplits&startDate=2025-08-01&endDate=2025-08-30" },
+      { name: "Spencer Torkelson", assoc: "Ryan H", url: "https://statsapi.mlb.com/api/v1/people/679529/stats?stats=byDateRange&group=hitting&type=statSplits&startDate=2025-08-01&endDate=2025-08-30" },
+      { name: "Brent Rooker", assoc: "Will", url: "https://statsapi.mlb.com/api/v1/people/667670/stats?stats=byDateRange&group=hitting&type=statSplits&startDate=2025-08-01&endDate=2025-08-30" },
+      { name: "Seiya Suzuki", assoc: "Ted", url: "https://statsapi.mlb.com/api/v1/people/673548/stats?stats=byDateRange&group=hitting&type=statSplits&startDate=2025-08-01&endDate=2025-08-30" },
+      { name: "Manny Machado", assoc: "Buck", url: "https://statsapi.mlb.com/api/v1/people/592518/stats?stats=byDateRange&group=hitting&type=statSplits&startDate=2025-08-01&endDate=2025-08-30" }
     ];
+
+    let simulationTarget = null;
+    let simInterval = null;
 
     async function loadStats() {
       const results = [];
@@ -113,47 +74,94 @@
           const splits = data.stats[0]?.splits[0]?.stat || {};
           const hr = parseInt(splits.homeRuns || 0);
           const rbi = parseInt(splits.rbi || 0);
-          results.push({ name: p.name, assoc: p.assoc, espn: p.espn, hr, rbi });
+          results.push({ name: p.name, assoc: p.assoc, hr, rbi });
         } catch (err) {
-          results.push({ name: p.name, assoc: p.assoc, espn: p.espn, hr: 0, rbi: 0 });
+          results.push({ name: p.name, assoc: p.assoc, hr: 0, rbi: 0 });
         }
       }
+      renderLeaderboard(results);
+    }
 
+    function renderLeaderboard(results, highlightName=null) {
       results.sort((a, b) => b.hr - a.hr || b.rbi - a.rbi);
 
       const tbody = document.getElementById("leaderboard");
+      const oldPositions = new Map();
+      Array.from(tbody.children).forEach(row => {
+        oldPositions.set(row.getAttribute("data-name"), row.getBoundingClientRect());
+      });
+
       tbody.innerHTML = "";
       results.forEach((p, idx) => {
         const tr = document.createElement("tr");
-        tr.innerHTML = `<td>${idx+1}</td><td><a class=\"player-link\" href=\"${p.espn}\" target=\"_blank\">${p.name}</a></td><td>${p.assoc}</td><td>${p.hr}</td><td>${p.rbi}</td>`;
+        tr.setAttribute("data-name", p.name);
+        tr.innerHTML = `<td>${idx+1}</td><td>${p.name}</td><td>${p.assoc}</td><td class='hr'>${p.hr}</td><td>${p.rbi}</td>`;
+        if (highlightName && p.name.toLowerCase().includes(highlightName)) {
+          tr.classList.add("highlight");
+          setTimeout(() => tr.classList.remove("highlight"), 1500);
+        }
         tbody.appendChild(tr);
       });
+
+      Array.from(tbody.children).forEach(row => {
+        const first = oldPositions.get(row.getAttribute("data-name"));
+        const last = row.getBoundingClientRect();
+        if (first) {
+          const invertY = first.top - last.top;
+          if (invertY !== 0) {
+            row.style.transform = `translateY(${invertY}px)`;
+            row.style.transition = "transform 0s";
+            requestAnimationFrame(() => {
+              row.style.transform = "";
+              row.style.transition = "transform 0.6s ease";
+            });
+          }
+        }
+      });
+    }
+
+    function startSimulation(target) {
+      clearInterval(simInterval);
+      simInterval = setInterval(() => {
+        const row = Array.from(document.querySelectorAll("#leaderboard tr"))
+          .find(r => r.getAttribute("data-name").toLowerCase().includes(target));
+        if (row) {
+          const hrCell = row.querySelector(".hr");
+          let current = parseInt(hrCell.textContent);
+          hrCell.textContent = current + 1;
+          const updated = Array.from(document.querySelectorAll("#leaderboard tr")).map(r => ({
+            name: r.getAttribute("data-name"),
+            assoc: r.children[2].textContent,
+            hr: parseInt(r.children[3].textContent),
+            rbi: parseInt(r.children[4].textContent)
+          }));
+          renderLeaderboard(updated, target);
+        }
+      }, 8000);
     }
 
     function startCountdown() {
       const targetDate = new Date("August 30, 2025 10:00:00 PST").getTime();
-
       setInterval(() => {
         const now = new Date().getTime();
         const distance = targetDate - now;
-
-        if (distance < 0) {
-          document.getElementById("countdown").innerText = "Draft has started!";
-          return;
-        }
-
+        if (distance < 0) { document.getElementById("countdown").innerText = "Draft has started!"; return; }
         const days = Math.floor(distance / (1000 * 60 * 60 * 24));
         const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
         const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
         const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-        document.getElementById("countdown").innerText =
-          `${days}d : ${hours}h : ${minutes}m : ${seconds}s`;
+        document.getElementById("countdown").innerText = `${days}d : ${hours}h : ${minutes}m : ${seconds}s`;
       }, 1000);
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    if (params.has("simulate")) {
+      simulationTarget = params.get("simulate").toLowerCase();
     }
 
     loadStats();
     startCountdown();
+    if (simulationTarget) startSimulation(simulationTarget);
   </script>
 </body>
 </html>
