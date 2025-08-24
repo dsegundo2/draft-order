@@ -3,22 +3,77 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>MLB HR & RBI Leaderboard</title>
+  <title>Draft 2025 - MLB HR & RBI Leaderboard</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
   <style>
-    table td, table th { text-align: center; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    thead {
+      background: #e0e0e0;
+      color: #333;
+    }
+
+    th, td {
+      padding: 0.75rem;
+      text-align: center;
+      border-bottom: 1px solid #ddd;
+    }
+
+    tbody tr:nth-child(odd) {
+      background: #f9f9f9;
+    }
+
+    tbody tr:nth-child(even) {
+      background: #efefef;
+    }
+
+    tbody tr:hover {
+      background: #dbeafe;
+      transition: background 0.2s ease;
+    }
+
     a.player-link { text-decoration: none; color: inherit; font-weight: bold; }
     a.player-link:hover { text-decoration: underline; color: #0366d6; }
-    #refreshBtn { margin-bottom: 1rem; }
+
+    #countdown-block {
+      background: linear-gradient(135deg, #0366d6, #4cafef);
+      border-radius: 12px;
+      padding: 1rem 2rem;
+      display: inline-block;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      margin-top: 0.5rem;
+      color: white;
+    }
+
+    #countdown {
+      font-size: 1.75rem;
+      font-weight: bold;
+      color: #fff;
+      margin: 0;
+      letter-spacing: 1px;
+    }
   </style>
 </head>
 <body>
   <nav class="container-fluid">
-    <ul><li><strong>MLB Leaders</strong></li></ul>
+    <ul><li><strong>⚾ Draft 2025</strong></li></ul>
   </nav>
 
+  <section class="container" style="text-align: center; margin-top: 1rem;">
+    <h3>Draft Day</h3>
+    <div id="countdown-block">
+      <h2 id="countdown">Loading countdown...</h2>
+    </div>
+  </section>
+
   <main class="container">
-    <button id="refreshBtn" role="button">Refresh Leaderboard</button>
     <table>
       <thead>
         <tr><th>Rank</th><th>Player</th><th>Associated</th><th>HR</th><th>RBI</th></tr>
@@ -75,8 +130,30 @@
       });
     }
 
-    document.getElementById("refreshBtn").addEventListener("click", loadStats);
+    function startCountdown() {
+      const targetDate = new Date("August 30, 2025 10:00:00 PST").getTime();
+
+      setInterval(() => {
+        const now = new Date().getTime();
+        const distance = targetDate - now;
+
+        if (distance < 0) {
+          document.getElementById("countdown").innerText = "Draft has started!";
+          return;
+        }
+
+        const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+        document.getElementById("countdown").innerText =
+          `${days}d : ${hours}h : ${minutes}m : ${seconds}s`;
+      }, 1000);
+    }
+
     loadStats();
+    startCountdown();
   </script>
 </body>
 </html>
