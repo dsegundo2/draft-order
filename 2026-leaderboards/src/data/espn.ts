@@ -1,5 +1,5 @@
 import { teamAssignments } from './teams'
-import type { ManagerStanding, ProgressStep } from '../types'
+import type { GameInfo, ManagerStanding, ProgressStep } from '../types'
 
 export const SCOREBOARD_URL = 'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?limit=500&dates=20260628-20260719'
 const KNOCKOUT_ROUNDS = new Set(['round-of-32', 'round-of-16', 'quarterfinals', 'semifinals', '3rd-place-match', 'final'])
@@ -9,40 +9,72 @@ type EspnCompetitor = { winner?: boolean; score?: string; team?: { displayName?:
 type EspnEvent = {
   name?: string
   date?: string
-  status?: { type?: { completed?: boolean } }
+  status?: { type?: { completed?: boolean; state?: string; name?: string; description?: string } }
   competitions?: Array<{ date?: string; competitors?: EspnCompetitor[]; notes?: Array<{ headline?: string }> }>
   season?: { slug?: string }
 }
 
-function isSameLocalDay(isoDate: string, now: Date): boolean {
+const PT_DATE = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Los_Angeles', year: 'numeric', month: '2-digit', day: '2-digit' })
+
+export function isSamePacificDay(isoDate: string, now: Date): boolean {
   const date = new Date(isoDate)
-  return !Number.isNaN(date.getTime())
-    && date.getFullYear() === now.getFullYear()
-    && date.getMonth() === now.getMonth()
-    && date.getDate() === now.getDate()
+  return !Number.isNaN(date.getTime()) && PT_DATE.format(date) === PT_DATE.format(now)
+}
+
+function gameState(event: EspnEvent): GameInfo['state'] {
+  const type = event.status?.type
+  const words = `${type?.name ?? ''} ${type?.description ?? ''}`.toLowerCase()
+  if (words.includes('postpon')) return 'postponed'
+  if (words.includes('cancel')) return 'canceled'
+  if (type?.completed || type?.state === 'post') return 'final'
+  if (type?.state === 'in') return 'live'
+  if (type?.state === 'pre') return 'scheduled'
+  return 'unknown'
+}
+
+function parsedScore(value?: string): number | undefined {
+  if (value == null || !/^\d+$/.test(value.trim())) return undefined
+  return Number.parseInt(value, 10)
 }
 
 export function buildStandings(events: EspnEvent[], now = new Date()): ManagerStanding[] {
   const byTeam = new Map<string, ManagerStanding>(teamAssignments.map((entry) => [entry.espnName.toLowerCase(), { ...entry, points: 0, wins: 0, goalsFor: 0, goalsAgainst: 0, progress: [] as ProgressStep[], eliminated: false }]))
   const knockoutTeams = new Set<string>()
-  const openingRoundEvents = events.filter((event) => event.season?.slug === 'round-of-32')
-  const openingRoundScheduled = openingRoundEvents.length >= 16
+  const openingRoundFixtures = new Set(events.flatMap((event) => {
+    if (event.season?.slug !== 'round-of-32') return []
+    const names = event.competitions?.[0]?.competitors?.map((entry) => entry.team?.displayName?.trim().toLowerCase()).filter((name): name is string => Boolean(name)) ?? []
+    return names.length === 2 ? [names.sort().join('|')] : []
+  }))
+  const openingRoundScheduled = openingRoundFixtures.size >= 16
 
   for (const event of events) {
     const competition = event.competitions?.[0]
     const kickoff = competition?.date ?? event.date
     const competitors = competition?.competitors ?? []
-    if (!kickoff || competitors.length !== 2 || !isSameLocalDay(kickoff, now)) continue
+    if (!kickoff || competitors.length !== 2) continue
+    const kickoffDate = new Date(kickoff)
+    if (Number.isNaN(kickoffDate.getTime())) continue
+    const state = gameState(event)
 
     for (const current of competitors) {
       const currentName = current.team?.displayName?.toLowerCase()
       const standing = currentName ? byTeam.get(currentName) : undefined
       const opponent = competitors.find((competitor) => competitor !== current)
       if (!standing || !opponent?.team?.displayName) continue
-      standing.gameToday = {
+      const teamScore = parsedScore(current.score)
+      const opponentScore = parsedScore(opponent.score)
+      const game: GameInfo = {
         opponent: opponent.team.displayName,
         kickoff,
-        completed: event.status?.type?.completed ?? false,
+        state,
+        ...(teamScore !== undefined && opponentScore !== undefined && (state === 'live' || state === 'final')
+          ? { score: { team: teamScore, opponent: opponentScore } }
+          : {}),
+      }
+      if (isSamePacificDay(kickoff, now)) standing.gameToday = game
+      if (kickoffDate > now && state === 'scheduled') {
+        const existing = standing.nextGame ? new Date(standing.nextGame.kickoff) : null
+        if (!existing || kickoffDate < existing) standing.nextGame = game
       }
     }
   }
@@ -56,10 +88,11 @@ export function buildStandings(events: EspnEvent[], now = new Date()): ManagerSt
   }
 
   for (const event of events) {
-    if (!event.status?.type?.completed) continue
+    if (gameState(event) !== 'final') continue
     const competition = event.competitions?.[0]
     const competitors = competition?.competitors ?? []
     if (competitors.length !== 2) continue
+    if (competitors.filter((competitor) => competitor.winner === true).length !== 1) continue
     const roundSlug = event.season?.slug ?? ''
     const isKnockout = KNOCKOUT_ROUNDS.has(roundSlug)
     if (!isKnockout) continue
@@ -70,8 +103,9 @@ export function buildStandings(events: EspnEvent[], now = new Date()): ManagerSt
       const standing = currentName ? byTeam.get(currentName) : undefined
       if (!standing) continue
       const opponent = competitors.find((competitor) => competitor !== current)
-      const goalsFor = Number.parseInt(current.score ?? '0', 10) || 0
-      const goalsAgainst = Number.parseInt(opponent?.score ?? '0', 10) || 0
+      const goalsFor = parsedScore(current.score)
+      const goalsAgainst = parsedScore(opponent?.score)
+      if (goalsFor === undefined || goalsAgainst === undefined) continue
       standing.goalsFor += goalsFor
       standing.goalsAgainst += goalsAgainst
       standing.points += goalsFor * 0.5
@@ -98,7 +132,7 @@ export function buildStandings(events: EspnEvent[], now = new Date()): ManagerSt
     }
   }
 
-  return [...byTeam.values()].sort((a, b) => b.points - a.points || b.goalsFor - a.goalsFor || b.population - a.population || a.manager.localeCompare(b.manager))
+  return [...byTeam.values()].sort((a, b) => b.points - a.points || b.goalsFor - a.goalsFor || (b.population ?? -1) - (a.population ?? -1) || a.manager.localeCompare(b.manager))
 }
 
 export async function fetchStandings(signal?: AbortSignal): Promise<ManagerStanding[]> {

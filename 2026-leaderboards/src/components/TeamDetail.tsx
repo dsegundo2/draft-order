@@ -1,5 +1,6 @@
 import type { ManagerStanding, ProgressStep } from '../types'
 import { BackIcon, CheckIcon } from './Icons'
+import { gameSummary } from './gameDisplay'
 
 type Props = { standing: ManagerStanding; onBack: () => void }
 
@@ -9,7 +10,8 @@ export function TeamDetail({ standing, onBack }: Props) {
   const completedWins = progress.filter((step) => step.outcome === 'win')
   const knockoutWinPoints = progress.reduce((sum, step) => sum + (step.points ?? 0), 0)
   const goalPoints = Math.max(standing.points - knockoutWinPoints, 0)
-  const population = new Intl.NumberFormat('en-US').format(standing.population)
+  const population = standing.population == null ? null : new Intl.NumberFormat('en-US').format(standing.population)
+  const upcoming = standing.gameToday ?? (!standing.eliminated ? standing.nextGame : undefined)
 
   return (
     <section className={standing.eliminated ? 'team-detail dark' : 'team-detail'} aria-label={`${standing.team} details`}>
@@ -22,6 +24,8 @@ export function TeamDetail({ standing, onBack }: Props) {
         </span>
       </div>
 
+      {upcoming ? <div className="game-preview panel"><h3>{standing.gameToday ? 'Today' : 'Next game'}</h3><p>vs {upcoming.opponent}<strong>{gameSummary(upcoming)}</strong></p></div> : null}
+
       <div className="stat-strip panel">
         <div><strong>{standing.points}</strong><span>Points</span></div>
         <div><strong>{standing.wins}</strong><span>{standing.wins === 1 ? 'Win' : 'Wins'}</span></div>
@@ -31,7 +35,7 @@ export function TeamDetail({ standing, onBack }: Props) {
       {eliminationStep ? (
         <div className="elimination panel">
           <strong>Elimination match</strong>
-          <div><span>{eliminationStep.round}<small>vs {eliminationStep.opponent}</small></span><b>{eliminationStep.result}</b></div>
+          <div><span>{eliminationStep.round}<small>vs {eliminationStep.opponent}</small></span><b>Loss</b></div>
         </div>
       ) : null}
 
@@ -42,7 +46,7 @@ export function TeamDetail({ standing, onBack }: Props) {
             <li key={step.round} className={step.complete ? 'complete' : ''}>
               <span className="step-icon">{step.complete ? <CheckIcon /> : null}</span>
               <span className="step-name">{step.round}<small>vs {step.opponent}</small></span>
-              <span className="step-result">{step.result ?? '—'}{step.points ? <small>+{step.points} pts</small> : null}</span>
+              <span className="step-result">Win{step.points ? <small>+{step.points} pts</small> : null}</span>
             </li>
           ))}
         </ol>
@@ -50,7 +54,8 @@ export function TeamDetail({ standing, onBack }: Props) {
 
       <div className="summary panel">
         <h3>Summary</h3>
-        <div><span>Goals for<strong>{standing.goalsFor}</strong></span><span>Goals against<strong>{standing.goalsAgainst}</strong></span><span>Population<strong>{population}</strong></span></div>
+        <div><span>Goals for<strong>{standing.goalsFor}</strong></span><span>Goals against<strong>{standing.goalsAgainst}</strong></span><span>Population<strong>{population ?? '—'}</strong></span></div>
+        {population && standing.populationSource?.url ? <a className="population-source" href={standing.populationSource.url} target="_blank" rel="noreferrer">{standing.populationSource.label}{standing.populationYear ? ` · ${standing.populationYear}` : ''}</a> : null}
       </div>
 
       <div className="breakdown panel">

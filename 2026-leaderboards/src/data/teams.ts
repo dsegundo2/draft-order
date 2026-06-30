@@ -1,5 +1,8 @@
 import type { TeamAssignment } from '../types'
 
+const worldBank2024 = { label: 'World Bank population data', url: 'https://data.worldbank.org/indicator/SP.POP.TOTL' }
+const onsEngland2024 = { label: 'ONS England population estimate', url: 'https://www.ons.gov.uk/peoplepopulationandcommunity/populationandmigration/populationestimates' }
+
 export const teamAssignments: TeamAssignment[] = [
   // 2024 population totals. World Bank SP.POP.TOTL, except England (ONS mid-2024 estimate).
   { manager: 'Ryan H.', team: 'Brazil', espnName: 'Brazil', flag: '🇧🇷', population: 211_998_573 },
@@ -15,3 +18,8 @@ export const teamAssignments: TeamAssignment[] = [
   { manager: 'Will', team: 'Croatia', espnName: 'Croatia', flag: '🇭🇷', population: 3_866_200 },
   { manager: 'Ted', team: 'Japan', espnName: 'Japan', flag: '🇯🇵', population: 123_975_371 },
 ]
+
+for (const assignment of teamAssignments) {
+  assignment.populationYear = 2024
+  assignment.populationSource = assignment.team === 'England' ? onsEngland2024 : worldBank2024
+}

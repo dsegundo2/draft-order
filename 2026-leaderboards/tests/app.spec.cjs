@@ -32,10 +32,12 @@ test('renders standings calculated from ESPN and opens accurate eliminated team 
   await page.getByRole('button', { name: /View Ryan L/ }).click()
   await expect(page.getByRole('heading', { name: 'Germany' })).toBeVisible()
   await expect(page.getByText('Elimination match')).toBeVisible()
-  await expect(page.getByLabel('Germany details').getByText('L 1–1').first()).toBeVisible()
+  await expect(page.getByLabel('Germany details').getByText('Loss').first()).toBeVisible()
+  await expect(page.getByLabel('Germany details')).not.toContainText('1–1')
   await expect(page.getByLabel('Germany details').locator('.stat-strip strong').first()).toHaveText('0.5')
   await expect(page.getByLabel('Germany details').locator('.breakdown p').first()).toContainText('0.5')
   await expect(page.getByLabel('Germany details')).toContainText('83,516,593')
+  await expect(page.getByRole('link', { name: 'World Bank population data · 2024' })).toHaveAttribute('href', 'https://data.worldbank.org/indicator/SP.POP.TOTL')
   await expect(page.getByRole('heading', { name: 'Knockout wins' })).toHaveCount(0)
 })
 

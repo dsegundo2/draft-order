@@ -4,7 +4,7 @@ import { buildStandings, fetchStandings, SCOREBOARD_URL } from './espn'
 const match = (home: string, homeScore: string, away: string, awayScore: string, options: { completed?: boolean; winner?: string; round?: string; date?: string } = {}) => ({
   date: options.date,
   season: { slug: options.round ?? 'group-stage' },
-  status: { type: { completed: options.completed ?? true } },
+  status: { type: { completed: options.completed ?? true, state: (options.completed ?? true) ? 'post' : 'pre' } },
   competitions: [{ competitors: [
     { winner: options.winner === home, score: homeScore, team: { displayName: home } },
     { winner: options.winner === away, score: awayScore, team: { displayName: away } },
@@ -74,9 +74,38 @@ describe('buildStandings', () => {
       match('Argentina', '0', 'Germany', '0', { completed: false, date: '2026-06-30T19:00:00Z', round: 'round-of-32' }),
       match('Brazil', '0', 'France', '0', { completed: false, date: '2026-07-01T19:00:00Z', round: 'round-of-32' }),
     ], new Date('2026-06-30T12:00:00Z'))
-    expect(result.find((entry) => entry.team === 'Argentina')?.gameToday).toEqual({ opponent: 'Germany', kickoff: '2026-06-30T19:00:00Z', completed: false })
+    expect(result.find((entry) => entry.team === 'Argentina')?.gameToday).toEqual({ opponent: 'Germany', kickoff: '2026-06-30T19:00:00Z', state: 'scheduled' })
     expect(result.find((entry) => entry.team === 'Germany')?.gameToday?.opponent).toBe('Argentina')
     expect(result.find((entry) => entry.team === 'Brazil')?.gameToday).toBeUndefined()
+  })
+
+  it('uses the Pacific calendar day and selects the earliest scheduled future game', () => {
+    const result = buildStandings([
+      match('Brazil', '0', 'France', '0', { completed: false, date: '2026-07-01T06:30:00Z', round: 'round-of-32' }),
+      match('Brazil', '0', 'Spain', '0', { completed: false, date: '2026-07-03T19:00:00Z', round: 'round-of-16' }),
+    ], new Date('2026-06-30T18:00:00Z'))
+    expect(result.find((entry) => entry.team === 'Brazil')).toMatchObject({
+      gameToday: { opponent: 'France', state: 'scheduled' },
+      nextGame: { opponent: 'France', kickoff: '2026-07-01T06:30:00Z' },
+    })
+  })
+
+  it('only exposes complete scores for live or final games', () => {
+    const live = match('Brazil', '2', 'France', '1', { completed: false, date: '2026-06-30T19:00:00Z', round: 'round-of-32' })
+    live.status.type.state = 'in'
+    const missing = match('Germany', '', 'Spain', '1', { completed: false, date: '2026-06-30T21:00:00Z', round: 'round-of-32' })
+    missing.status.type.state = 'in'
+    const result = buildStandings([live, missing], new Date('2026-06-30T18:00:00Z'))
+    expect(result.find((entry) => entry.team === 'Brazil')?.gameToday).toMatchObject({ state: 'live', score: { team: 2, opponent: 1 } })
+    expect(result.find((entry) => entry.team === 'Germany')?.gameToday?.score).toBeUndefined()
+  })
+
+  it('does not score or eliminate from a malformed completed event', () => {
+    const malformed = match('Brazil', '', 'France', '1', { completed: true, winner: 'France', round: 'round-of-32' })
+    const noWinner = match('Germany', '1', 'Spain', '0', { completed: true, round: 'round-of-32' })
+    const result = buildStandings([malformed, noWinner])
+    expect(result.find((entry) => entry.team === 'Brazil')).toMatchObject({ points: 0, eliminated: false })
+    expect(result.find((entry) => entry.team === 'Germany')).toMatchObject({ points: 0, eliminated: false })
   })
 })
 

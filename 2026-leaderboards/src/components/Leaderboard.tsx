@@ -1,4 +1,5 @@
 import type { ManagerStanding } from '../types'
+import { gameSummary } from './gameDisplay'
 
 type Props = {
   standings: ManagerStanding[]
@@ -25,7 +26,8 @@ export function Leaderboard({ standings, onSelect }: Props) {
               <span className="team">
                 <span className="flag" role="img" aria-label={`${standing.team} flag`}>{standing.flag}</span>
                 <span className="team-name">{standing.team}</span>
-                {standing.gameToday ? <small className="today-match">vs {standing.gameToday.opponent} today</small> : null}
+                {standing.gameToday ? <small className="today-match">vs {standing.gameToday.opponent} · {gameSummary(standing.gameToday)}</small>
+                  : standing.nextGame && !standing.eliminated ? <small className="next-match">Next vs {standing.nextGame.opponent} · {gameSummary(standing.nextGame)}</small> : null}
               </span>
               <strong className="points">{standing.points}</strong>
               <span className="wins">{standing.wins}</span>
