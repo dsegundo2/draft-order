@@ -41,6 +41,24 @@ test('renders standings calculated from ESPN and opens accurate eliminated team 
   await expect(page.getByRole('heading', { name: 'Knockout wins' })).toHaveCount(0)
 })
 
+test('refresh recalculates live goals and half-points from the latest score', async ({ page }) => {
+  let score = 1
+  await page.route('**/scoreboard?**', (route) => {
+    const live = event('France', score, 'Sweden', 0, { round: 'round-of-32', completed: false })
+    live.date = new Date().toISOString()
+    live.status.type.state = 'in'
+    return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ events: [live] }) })
+  })
+  await page.goto('/')
+  await expect(page.getByRole('button', { name: /View Jeff, France, 0.5 points/ })).toBeVisible()
+  score = 2
+  await page.getByRole('button', { name: 'Refresh' }).click()
+  const updatedFrance = page.getByRole('button', { name: /View Jeff, France, 1 points/ })
+  await expect(updatedFrance).toBeVisible()
+  await expect(updatedFrance.locator('.goals')).toHaveText('2')
+  await expect(updatedFrance.locator('.today-match')).toContainText('Live 2–0')
+})
+
 test('shows an honest error with no fake standings when ESPN fails, then retries', async ({ page }) => {
   await page.route('**/scoreboard?**', (route) => route.fulfill({ status: 503, body: '' }))
   await page.goto('/')

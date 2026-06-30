@@ -87,6 +87,25 @@ export function buildStandings(events: EspnEvent[], now = new Date()): ManagerSt
     }
   }
 
+  // Count reliable live knockout goals immediately. Win points and elimination
+  // still wait for ESPN to mark the match final.
+  for (const event of events) {
+    if (gameState(event) !== 'live' || !KNOCKOUT_ROUNDS.has(event.season?.slug ?? '')) continue
+    const competitors = event.competitions?.[0]?.competitors ?? []
+    if (competitors.length !== 2) continue
+    for (const current of competitors) {
+      const currentName = current.team?.displayName?.toLowerCase()
+      const standing = currentName ? byTeam.get(currentName) : undefined
+      const opponent = competitors.find((competitor) => competitor !== current)
+      const goalsFor = parsedScore(current.score)
+      const goalsAgainst = parsedScore(opponent?.score)
+      if (!standing || goalsFor === undefined || goalsAgainst === undefined) continue
+      standing.goalsFor += goalsFor
+      standing.goalsAgainst += goalsAgainst
+      standing.points += goalsFor * 0.5
+    }
+  }
+
   for (const event of events) {
     if (gameState(event) !== 'final') continue
     const competition = event.competitions?.[0]

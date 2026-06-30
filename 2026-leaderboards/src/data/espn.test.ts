@@ -97,7 +97,9 @@ describe('buildStandings', () => {
     missing.status.type.state = 'in'
     const result = buildStandings([live, missing], new Date('2026-06-30T18:00:00Z'))
     expect(result.find((entry) => entry.team === 'Brazil')?.gameToday).toMatchObject({ state: 'live', score: { team: 2, opponent: 1 } })
+    expect(result.find((entry) => entry.team === 'Brazil')).toMatchObject({ points: 1, goalsFor: 2, goalsAgainst: 1, wins: 0 })
     expect(result.find((entry) => entry.team === 'Germany')?.gameToday?.score).toBeUndefined()
+    expect(result.find((entry) => entry.team === 'Germany')).toMatchObject({ points: 0, goalsFor: 0, goalsAgainst: 0 })
   })
 
   it('does not score or eliminate from a malformed completed event', () => {

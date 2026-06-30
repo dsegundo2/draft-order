@@ -14,7 +14,7 @@ export function Leaderboard({ standings, onSelect }: Props) {
       </div>
       <ol className="table-body">
         {standings.map((standing, index) => (
-          <li key={standing.manager} className={[standing.eliminated ? 'is-eliminated' : '', standing.gameToday ? 'has-game-today' : '', standing.gameToday || standing.nextGame && !standing.eliminated ? 'has-match' : ''].filter(Boolean).join(' ')}>
+          <li key={standing.manager} className={[standing.eliminated ? 'is-eliminated' : '', standing.gameToday && ['scheduled', 'live'].includes(standing.gameToday.state) ? 'has-game-today' : '', standing.gameToday || standing.nextGame && !standing.eliminated ? 'has-match' : ''].filter(Boolean).join(' ')}>
             <button
               type="button"
               className="row"
@@ -22,7 +22,7 @@ export function Leaderboard({ standings, onSelect }: Props) {
               aria-label={`View ${standing.manager}, ${standing.team}, ${standing.points} points`}
             >
               <span className="rank">{index + 1}</span>
-              <span className="manager">{standing.manager}</span>
+              <span className="manager"><span className="manager-name">{standing.manager}</span><span className="mobile-team" aria-hidden="true"><span>{standing.flag}</span>{standing.team}</span></span>
               <span className="team">
                 <span className="flag" role="img" aria-label={`${standing.team} flag`}>{standing.flag}</span>
                 <span className="team-name">{standing.team}</span>
