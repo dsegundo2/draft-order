@@ -33,6 +33,10 @@ test('renders standings calculated from ESPN and opens accurate eliminated team 
   await expect(page.getByRole('heading', { name: 'Germany' })).toBeVisible()
   await expect(page.getByText('Elimination match')).toBeVisible()
   await expect(page.getByLabel('Germany details').getByText('L 1–1').first()).toBeVisible()
+  await expect(page.getByLabel('Germany details').locator('.stat-strip strong').first()).toHaveText('0.5')
+  await expect(page.getByLabel('Germany details').locator('.breakdown p').first()).toContainText('0.5')
+  await expect(page.getByLabel('Germany details')).toContainText('83,516,593')
+  await expect(page.getByRole('heading', { name: 'Knockout wins' })).toHaveCount(0)
 })
 
 test('shows an honest error with no fake standings when ESPN fails, then retries', async ({ page }) => {
@@ -79,5 +83,9 @@ test('social preview renders all current rows and eliminated styling', async ({ 
   await expect(page.getByRole('main', { name: 'Fantasy Order leaderboard preview' })).toBeVisible()
   await expect(page.locator('.preview-row')).toHaveCount(12)
   await expect(page.locator('.preview-row.is-eliminated')).toHaveCount(2)
+  await expect(page.locator('.preview-head').first()).toHaveText('#Manager / TeamPoints')
+  await expect(page.locator('.preview-head').first()).not.toContainText('GF')
+  await expect(page.locator('.preview-head').first()).not.toContainText('W')
+  await expect(page.locator('.preview-header')).toContainText('🏆')
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth && document.documentElement.scrollHeight <= window.innerHeight)).toBe(true)
 })

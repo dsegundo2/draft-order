@@ -1,7 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { buildStandings, fetchStandings, SCOREBOARD_URL } from './espn'
 
-const match = (home: string, homeScore: string, away: string, awayScore: string, options: { completed?: boolean; winner?: string; round?: string } = {}) => ({
+const match = (home: string, homeScore: string, away: string, awayScore: string, options: { completed?: boolean; winner?: string; round?: string; date?: string } = {}) => ({
+  date: options.date,
   season: { slug: options.round ?? 'group-stage' },
   status: { type: { completed: options.completed ?? true } },
   competitions: [{ competitors: [
@@ -32,11 +33,11 @@ describe('buildStandings', () => {
     expect(result.find((entry) => entry.team === 'Germany')?.eliminated).toBe(true)
   })
 
-  it('sorts by points, goals, then manager and ignores unknown teams', () => {
+  it('sorts tied teams by population and ignores unknown teams', () => {
     const result = buildStandings([match('Unknown FC', '8', 'Also Unknown', '0', { winner: 'Unknown FC' })])
     expect(result).toHaveLength(12)
     expect(result.every((entry) => entry.points === 0)).toBe(true)
-    expect(result[0].manager.localeCompare(result[1].manager)).toBeLessThanOrEqual(0)
+    expect(result.slice(0, 2).map((entry) => entry.team)).toEqual(['Brazil', 'Mexico'])
   })
 
   it('awards three points per win plus half a point per goal', () => {
@@ -48,7 +49,7 @@ describe('buildStandings', () => {
     expect(result.find((entry) => entry.team === 'Netherlands')?.points).toBe(0.5)
   })
 
-  it('breaks equal-point ties by goals for, then manager name, not goal difference', () => {
+  it('breaks equal-point ties by goals for, then population, not goal difference', () => {
     const goalsResult = buildStandings([
       match('Brazil', '0', 'Scotland', '0', { winner: 'Brazil', round: 'round-of-32' }),
       match('Netherlands', '6', 'Morocco', '7', { winner: 'Morocco', round: 'round-of-32' }),
@@ -59,7 +60,23 @@ describe('buildStandings', () => {
       match('Brazil', '2', 'Scotland', '0', { winner: 'Brazil', round: 'round-of-32' }),
       match('Argentina', '2', 'Jordan', '1', { winner: 'Argentina', round: 'round-of-32' }),
     ])
-    expect(alphabeticalResult.slice(0, 2).map((entry) => entry.manager)).toEqual(['Diego', 'Ryan H.'])
+    expect(alphabeticalResult.slice(0, 2).map((entry) => entry.team)).toEqual(['Brazil', 'Argentina'])
+  })
+
+  it('uses population as the final tiebreaker, with the larger country first', () => {
+    const result = buildStandings([])
+    expect(result.find((entry) => entry.team === 'Japan')?.population).toBe(123_975_371)
+    expect(result.indexOf(result.find((entry) => entry.team === 'Japan')!)).toBeLessThan(result.indexOf(result.find((entry) => entry.team === 'Germany')!))
+  })
+
+  it("exposes today's opponent and kickoff without treating a selected row as state", () => {
+    const result = buildStandings([
+      match('Argentina', '0', 'Germany', '0', { completed: false, date: '2026-06-30T19:00:00Z', round: 'round-of-32' }),
+      match('Brazil', '0', 'France', '0', { completed: false, date: '2026-07-01T19:00:00Z', round: 'round-of-32' }),
+    ], new Date('2026-06-30T12:00:00Z'))
+    expect(result.find((entry) => entry.team === 'Argentina')?.gameToday).toEqual({ opponent: 'Germany', kickoff: '2026-06-30T19:00:00Z', completed: false })
+    expect(result.find((entry) => entry.team === 'Germany')?.gameToday?.opponent).toBe('Argentina')
+    expect(result.find((entry) => entry.team === 'Brazil')?.gameToday).toBeUndefined()
   })
 })
 

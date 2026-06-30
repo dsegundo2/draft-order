@@ -66,7 +66,7 @@ export default function App() {
       <section className="standings-view">
         <header className="app-header">
           <div>
-            <h1>Fantasy Order 2026 <span aria-hidden="true">🏈⚽</span></h1>
+            <h1>Fantasy Order 2026 <span aria-hidden="true">🏆</span></h1>
             {updatedAt ? <p className="updated">Updated {updateFormatter.format(updatedAt)}</p> : null}
           </div>
           <button className={loading ? 'refresh is-loading' : 'refresh'} onClick={refresh} type="button" disabled={loading}>
@@ -75,7 +75,7 @@ export default function App() {
         </header>
         {error && !standings ? <div className="data-state error-state" role="alert"><strong>We couldn't reach ESPN.</strong><span>{error}</span><button type="button" onClick={refresh}>Try again</button></div> : null}
         {loading && !standings ? <div className="data-state" role="status">Loading live ESPN results…</div> : null}
-        {standings ? <Leaderboard standings={standings} selected={selected} onSelect={selectStanding} /> : null}
+        {standings ? <Leaderboard standings={standings} onSelect={selectStanding} /> : null}
       </section>
       {selected ? <TeamDetail standing={selected} onBack={closeDetail} /> : null}
     </main>

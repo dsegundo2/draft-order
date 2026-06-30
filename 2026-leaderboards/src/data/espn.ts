@@ -8,16 +8,44 @@ const ROUND_NAMES: Record<string, string> = { 'round-of-32': 'Round of 32', 'rou
 type EspnCompetitor = { winner?: boolean; score?: string; team?: { displayName?: string } }
 type EspnEvent = {
   name?: string
+  date?: string
   status?: { type?: { completed?: boolean } }
-  competitions?: Array<{ competitors?: EspnCompetitor[]; notes?: Array<{ headline?: string }> }>
+  competitions?: Array<{ date?: string; competitors?: EspnCompetitor[]; notes?: Array<{ headline?: string }> }>
   season?: { slug?: string }
 }
 
-export function buildStandings(events: EspnEvent[]): ManagerStanding[] {
-  const byTeam = new Map(teamAssignments.map((entry) => [entry.espnName.toLowerCase(), { ...entry, points: 0, wins: 0, goalsFor: 0, goalsAgainst: 0, progress: [] as ProgressStep[], eliminated: false }]))
+function isSameLocalDay(isoDate: string, now: Date): boolean {
+  const date = new Date(isoDate)
+  return !Number.isNaN(date.getTime())
+    && date.getFullYear() === now.getFullYear()
+    && date.getMonth() === now.getMonth()
+    && date.getDate() === now.getDate()
+}
+
+export function buildStandings(events: EspnEvent[], now = new Date()): ManagerStanding[] {
+  const byTeam = new Map<string, ManagerStanding>(teamAssignments.map((entry) => [entry.espnName.toLowerCase(), { ...entry, points: 0, wins: 0, goalsFor: 0, goalsAgainst: 0, progress: [] as ProgressStep[], eliminated: false }]))
   const knockoutTeams = new Set<string>()
   const openingRoundEvents = events.filter((event) => event.season?.slug === 'round-of-32')
   const openingRoundScheduled = openingRoundEvents.length >= 16
+
+  for (const event of events) {
+    const competition = event.competitions?.[0]
+    const kickoff = competition?.date ?? event.date
+    const competitors = competition?.competitors ?? []
+    if (!kickoff || competitors.length !== 2 || !isSameLocalDay(kickoff, now)) continue
+
+    for (const current of competitors) {
+      const currentName = current.team?.displayName?.toLowerCase()
+      const standing = currentName ? byTeam.get(currentName) : undefined
+      const opponent = competitors.find((competitor) => competitor !== current)
+      if (!standing || !opponent?.team?.displayName) continue
+      standing.gameToday = {
+        opponent: opponent.team.displayName,
+        kickoff,
+        completed: event.status?.type?.completed ?? false,
+      }
+    }
+  }
 
   for (const event of events) {
     if (!KNOCKOUT_ROUNDS.has(event.season?.slug ?? '')) continue
@@ -56,6 +84,7 @@ export function buildStandings(events: EspnEvent[]): ManagerStanding[] {
       standing.progress.push({
         round: round || 'Knockout round',
         opponent: opponent?.team?.displayName ?? 'TBD',
+        outcome: current.winner ? 'win' : 'loss',
         result: `${current.winner ? 'W' : 'L'} ${goalsFor}–${goalsAgainst}`,
         points: current.winner ? 3 : 0,
         complete: true,
@@ -69,7 +98,7 @@ export function buildStandings(events: EspnEvent[]): ManagerStanding[] {
     }
   }
 
-  return [...byTeam.values()].sort((a, b) => b.points - a.points || b.goalsFor - a.goalsFor || a.manager.localeCompare(b.manager))
+  return [...byTeam.values()].sort((a, b) => b.points - a.points || b.goalsFor - a.goalsFor || b.population - a.population || a.manager.localeCompare(b.manager))
 }
 
 export async function fetchStandings(signal?: AbortSignal): Promise<ManagerStanding[]> {
