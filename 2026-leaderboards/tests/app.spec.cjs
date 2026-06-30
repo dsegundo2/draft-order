@@ -48,12 +48,24 @@ test('mobile standings have separated columns and detail returns cleanly', async
   await page.setViewportSize({ width: 390, height: 844 })
   await mockEspn(page)
   await page.goto('/')
-  const boxes = await page.locator('.row').first().locator(':scope > span, :scope > strong').evaluateAll((cells) => cells.map((cell) => cell.getBoundingClientRect()).map(({ left, right }) => ({ left, right })))
-  for (let index = 1; index < boxes.length; index += 1) expect(boxes[index].left - boxes[index - 1].right).toBeGreaterThanOrEqual(4)
+  const layout = await page.locator('.row').first().evaluate((row) => {
+    const box = (selector) => row.querySelector(selector).getBoundingClientRect()
+    return { manager: box('.manager'), team: box('.team'), points: box('.points'), wins: box('.wins'), goals: box('.goals') }
+  })
+  expect(layout.team.top).toBeGreaterThan(layout.manager.top)
+  expect(layout.wins.left - layout.points.right).toBeGreaterThanOrEqual(7)
+  expect(layout.goals.left - layout.wins.right).toBeGreaterThanOrEqual(7)
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
   await page.getByRole('button', { name: /View Ryan L/ }).click()
   await expect(page.getByRole('heading', { name: 'Germany' })).toBeVisible()
   await expect(page.getByLabel('Germany details').getByText('Eliminated', { exact: true })).toBeVisible()
   await page.getByRole('button', { name: 'Back to standings' }).click()
   await expect(page.getByRole('heading', { name: 'Fantasy Order 2026' })).toBeVisible()
+})
+
+test('320px standings do not overflow', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 568 })
+  await mockEspn(page)
+  await page.goto('/')
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
 })

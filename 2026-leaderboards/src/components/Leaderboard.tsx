@@ -10,7 +10,7 @@ export function Leaderboard({ standings, selected, onSelect }: Props) {
   return (
     <section className="leaderboard" aria-label="Manager standings">
       <div className="table-head" aria-hidden="true">
-        <span>#</span><span>Manager</span><span>Team</span><span>Pts</span><span>W</span><span title="Goals for">GF</span>
+        <span className="rank">#</span><span className="manager">Manager</span><span className="team">Team</span><span className="points">Pts</span><span className="wins">W</span><span className="goals" title="Goals for">GF</span>
       </div>
       <ol className="table-body">
         {standings.map((standing, index) => (

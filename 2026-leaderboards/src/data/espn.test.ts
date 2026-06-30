@@ -38,6 +38,20 @@ describe('buildStandings', () => {
     expect(result.every((entry) => entry.points === 0)).toBe(true)
     expect(result[0].manager.localeCompare(result[1].manager)).toBeLessThanOrEqual(0)
   })
+
+  it('breaks equal-point ties by goals for, then manager name, not goal difference', () => {
+    const goalsResult = buildStandings([
+      match('Brazil', '1', 'Scotland', '0', { winner: 'Brazil', round: 'round-of-32' }),
+      match('Argentina', '2', 'Jordan', '1', { winner: 'Argentina', round: 'round-of-32' }),
+    ])
+    expect(goalsResult.slice(0, 2).map((entry) => entry.team)).toEqual(['Argentina', 'Brazil'])
+
+    const alphabeticalResult = buildStandings([
+      match('Brazil', '2', 'Scotland', '0', { winner: 'Brazil', round: 'round-of-32' }),
+      match('Argentina', '2', 'Jordan', '1', { winner: 'Argentina', round: 'round-of-32' }),
+    ])
+    expect(alphabeticalResult.slice(0, 2).map((entry) => entry.manager)).toEqual(['Diego', 'Ryan H.'])
+  })
 })
 
 describe('fetchStandings', () => {
