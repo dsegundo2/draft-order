@@ -15,7 +15,6 @@ export default function App() {
   const [mobileDetailOpen, setMobileDetailOpen] = useState(false)
   const [updatedAt, setUpdatedAt] = useState(new Date('2026-06-07T08:41:00-05:00'))
   const [loading, setLoading] = useState(false)
-  const [live, setLive] = useState(false)
 
   const refresh = useCallback(async () => {
     setLoading(true)
@@ -23,9 +22,8 @@ export default function App() {
       const next = await fetchStandings()
       setStandings(next)
       setUpdatedAt(new Date())
-      setLive(true)
     } catch {
-      setLive(false)
+      // Keep the seeded standings visible when ESPN is unavailable.
     } finally {
       setLoading(false)
     }
@@ -36,8 +34,7 @@ export default function App() {
     fetchStandings(controller.signal).then((next) => {
       setStandings(next)
       setUpdatedAt(new Date())
-      setLive(true)
-    }).catch(() => setLive(false))
+    }).catch(() => undefined)
     return () => controller.abort()
   }, [])
 
@@ -60,7 +57,7 @@ export default function App() {
           <div>
             <h1>World Cup 2026</h1>
             <p className="live-label"><span />Standings</p>
-            <p className="updated">Updated: {updateFormatter.format(updatedAt)}{live ? ' · Live data' : ''}</p>
+            <p className="updated">Updated: {updateFormatter.format(updatedAt)}</p>
           </div>
           <button className={loading ? 'refresh is-loading' : 'refresh'} onClick={refresh} type="button" disabled={loading}>
             <RefreshIcon /><span>{loading ? 'Updating' : 'Refresh'}</span>
