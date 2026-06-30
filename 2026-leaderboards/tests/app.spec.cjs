@@ -10,7 +10,7 @@ const event = (a, aScore, b, bScore, { winner, round = 'group-stage', completed 
 })
 
 const payload = { events: [
-  event('Brazil', 2, 'Germany', 1, { winner: 'Brazil' }),
+  event('Brazil', 2, 'Scotland', 1, { winner: 'Brazil', round: 'round-of-32' }),
   event('Brazil', 1, 'France', 1),
   event('Germany', 1, 'Paraguay', 1, { winner: 'Paraguay', round: 'round-of-32' }),
 ] }
@@ -25,7 +25,7 @@ test('renders standings calculated from ESPN and opens accurate eliminated team 
   await expect(page).toHaveTitle('Fantasy Border 2026')
   await expect(page.getByRole('heading', { name: 'Fantasy Border 2026' })).toBeVisible()
   await expect(page.getByText(/Updated/)).toBeVisible()
-  await expect(page.getByRole('button', { name: /View Ryan H.*, 4 points/ })).toBeVisible()
+  await expect(page.getByRole('button', { name: /View Ryan H.*, 3 points/ })).toBeVisible()
   await expect(page.getByRole('button', { name: /View Ryan L.*, 0 points/ })).toBeVisible()
   await page.getByRole('button', { name: /View Ryan L/ }).click()
   await expect(page.getByRole('heading', { name: 'Germany' })).toBeVisible()
@@ -41,7 +41,7 @@ test('shows an honest error with no fake standings when ESPN fails, then retries
   await page.unroute('**/scoreboard?**')
   await mockEspn(page)
   await page.getByRole('button', { name: 'Try again' }).click()
-  await expect(page.getByRole('button', { name: /View Ryan H.*, 4 points/ })).toBeVisible()
+  await expect(page.getByRole('button', { name: /View Ryan H.*, 3 points/ })).toBeVisible()
 })
 
 test('mobile standings have separated columns and detail returns cleanly', async ({ page }) => {

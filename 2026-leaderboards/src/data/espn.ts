@@ -1,7 +1,7 @@
 import { teamAssignments } from './teams'
 import type { ManagerStanding, ProgressStep } from '../types'
 
-export const SCOREBOARD_URL = 'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?limit=500&dates=2026'
+export const SCOREBOARD_URL = 'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?limit=500&dates=20260628-20260719'
 const KNOCKOUT_ROUNDS = new Set(['round-of-32', 'round-of-16', 'quarterfinals', 'semifinals', '3rd-place-match', 'final'])
 const ROUND_NAMES: Record<string, string> = { 'round-of-32': 'Round of 32', 'round-of-16': 'Round of 16', quarterfinals: 'Quarterfinals', semifinals: 'Semifinals', '3rd-place-match': 'Third-place match', final: 'Final' }
 
@@ -16,8 +16,8 @@ type EspnEvent = {
 export function buildStandings(events: EspnEvent[]): ManagerStanding[] {
   const byTeam = new Map(teamAssignments.map((entry) => [entry.espnName.toLowerCase(), { ...entry, points: 0, wins: 0, goalsFor: 0, goalsAgainst: 0, progress: [] as ProgressStep[], eliminated: false }]))
   const knockoutTeams = new Set<string>()
-  const groupEvents = events.filter((event) => event.season?.slug === 'group-stage')
-  const groupStageComplete = groupEvents.length > 0 && groupEvents.every((event) => event.status?.type?.completed)
+  const openingRoundEvents = events.filter((event) => event.season?.slug === 'round-of-32')
+  const openingRoundScheduled = openingRoundEvents.length >= 16
 
   for (const event of events) {
     if (!KNOCKOUT_ROUNDS.has(event.season?.slug ?? '')) continue
@@ -34,6 +34,7 @@ export function buildStandings(events: EspnEvent[]): ManagerStanding[] {
     if (competitors.length !== 2) continue
     const roundSlug = event.season?.slug ?? ''
     const isKnockout = KNOCKOUT_ROUNDS.has(roundSlug)
+    if (!isKnockout) continue
     const round = ROUND_NAMES[roundSlug] ?? competition?.notes?.[0]?.headline ?? 'Knockout round'
 
     for (const current of competitors) {
@@ -48,24 +49,20 @@ export function buildStandings(events: EspnEvent[]): ManagerStanding[] {
       if (current.winner) {
         standing.wins += 1
         standing.points += 3
-      } else if (!isKnockout && goalsFor === goalsAgainst) {
-        standing.points += 1
-      } else if (isKnockout) {
+      } else {
         standing.eliminated = true
       }
-      if (isKnockout) {
-        standing.progress.push({
-          round: round || 'Knockout round',
-          opponent: opponent?.team?.displayName ?? 'TBD',
-          result: `${current.winner ? 'W' : 'L'} ${goalsFor}–${goalsAgainst}`,
-          points: current.winner ? 3 : 0,
-          complete: true,
-        })
-      }
+      standing.progress.push({
+        round: round || 'Knockout round',
+        opponent: opponent?.team?.displayName ?? 'TBD',
+        result: `${current.winner ? 'W' : 'L'} ${goalsFor}–${goalsAgainst}`,
+        points: current.winner ? 3 : 0,
+        complete: true,
+      })
     }
   }
 
-  if (groupStageComplete) {
+  if (openingRoundScheduled) {
     for (const [name, standing] of byTeam) {
       if (!knockoutTeams.has(name)) standing.eliminated = true
     }

@@ -11,13 +11,13 @@ const match = (home: string, homeScore: string, away: string, awayScore: string,
 })
 
 describe('buildStandings', () => {
-  it('accumulates completed wins, draws, goals, and ignores scheduled matches', () => {
+  it('ignores group play and scheduled knockout matches', () => {
     const result = buildStandings([
       match('Brazil', '2', 'Germany', '1', { winner: 'Brazil' }),
       match('Brazil', '1', 'France', '1'),
-      match('Brazil', '9', 'Spain', '0', { completed: false, winner: 'Brazil' }),
+      match('Brazil', '9', 'Spain', '0', { completed: false, winner: 'Brazil', round: 'round-of-32' }),
     ])
-    expect(result.find((entry) => entry.team === 'Brazil')).toMatchObject({ points: 4, wins: 1, goalsFor: 3, goalsAgainst: 2 })
+    expect(result.find((entry) => entry.team === 'Brazil')).toMatchObject({ points: 0, wins: 0, goalsFor: 0, goalsAgainst: 0, progress: [] })
   })
 
   it('uses ESPN season.slug for a Round of 32 loss and handles a penalty tie', () => {
@@ -25,11 +25,9 @@ describe('buildStandings', () => {
     expect(result.find((entry) => entry.team === 'Germany')).toMatchObject({ points: 0, eliminated: true, progress: [{ round: 'Round of 32', opponent: 'Paraguay', result: 'L 1–1', complete: true }] })
   })
 
-  it('marks managed teams absent from the bracket out after the group stage is complete', () => {
-    const result = buildStandings([
-      match('Brazil', '2', 'Germany', '0', { winner: 'Brazil' }),
-      match('Brazil', '0', 'Paraguay', '0', { completed: false, round: 'round-of-32' }),
-    ])
+  it('marks managed teams absent from a complete Round of 32 schedule eliminated', () => {
+    const schedule = Array.from({ length: 16 }, (_, index) => match(index ? `Team ${index}` : 'Brazil', '0', `Opponent ${index}`, '0', { completed: false, round: 'round-of-32' }))
+    const result = buildStandings(schedule)
     expect(result.find((entry) => entry.team === 'Brazil')?.eliminated).toBe(false)
     expect(result.find((entry) => entry.team === 'Germany')?.eliminated).toBe(true)
   })
@@ -46,10 +44,11 @@ describe('fetchStandings', () => {
   afterEach(() => vi.unstubAllGlobals())
 
   it('requests the working ESPN URL and maps events', async () => {
-    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ events: [match('Brazil', '2', 'Germany', '1', { winner: 'Brazil' })] }) })
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ events: [match('Brazil', '2', 'Germany', '1', { winner: 'Brazil', round: 'round-of-32' })] }) })
     vi.stubGlobal('fetch', fetchMock)
     await expect(fetchStandings()).resolves.toEqual(expect.arrayContaining([expect.objectContaining({ team: 'Brazil', points: 3 })]))
     expect(fetchMock).toHaveBeenCalledWith(SCOREBOARD_URL, { signal: undefined })
+    expect(SCOREBOARD_URL).toContain('dates=20260628-20260719')
   })
 
   it('rejects non-OK and empty ESPN responses instead of supplying fallback scores', async () => {
