@@ -28,6 +28,7 @@ live('live ESPN contract', () => {
         const goalsAgainst = Number.parseInt(opponent?.score ?? '0', 10) || 0
         result.goalsFor += goalsFor
         result.goalsAgainst += goalsAgainst
+        result.points += goalsFor * 0.5
         if (competitor.winner) { result.wins += 1; result.points += 3 }
       }
     }

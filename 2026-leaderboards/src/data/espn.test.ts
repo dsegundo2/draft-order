@@ -22,7 +22,7 @@ describe('buildStandings', () => {
 
   it('uses ESPN season.slug for a Round of 32 loss and handles a penalty tie', () => {
     const result = buildStandings([match('Germany', '1', 'Paraguay', '1', { winner: 'Paraguay', round: 'round-of-32' })])
-    expect(result.find((entry) => entry.team === 'Germany')).toMatchObject({ points: 0, eliminated: true, progress: [{ round: 'Round of 32', opponent: 'Paraguay', result: 'L 1–1', complete: true }] })
+    expect(result.find((entry) => entry.team === 'Germany')).toMatchObject({ points: 0.5, eliminated: true, progress: [{ round: 'Round of 32', opponent: 'Paraguay', result: 'L 1–1', complete: true }] })
   })
 
   it('marks managed teams absent from a complete Round of 32 schedule eliminated', () => {
@@ -39,12 +39,21 @@ describe('buildStandings', () => {
     expect(result[0].manager.localeCompare(result[1].manager)).toBeLessThanOrEqual(0)
   })
 
+  it('awards three points per win plus half a point per goal', () => {
+    const result = buildStandings([
+      match('Brazil', '2', 'Scotland', '1', { winner: 'Brazil', round: 'round-of-32' }),
+      match('Netherlands', '1', 'Morocco', '1', { winner: 'Morocco', round: 'round-of-32' }),
+    ])
+    expect(result.find((entry) => entry.team === 'Brazil')?.points).toBe(4)
+    expect(result.find((entry) => entry.team === 'Netherlands')?.points).toBe(0.5)
+  })
+
   it('breaks equal-point ties by goals for, then manager name, not goal difference', () => {
     const goalsResult = buildStandings([
-      match('Brazil', '1', 'Scotland', '0', { winner: 'Brazil', round: 'round-of-32' }),
-      match('Argentina', '2', 'Jordan', '1', { winner: 'Argentina', round: 'round-of-32' }),
+      match('Brazil', '0', 'Scotland', '0', { winner: 'Brazil', round: 'round-of-32' }),
+      match('Netherlands', '6', 'Morocco', '7', { winner: 'Morocco', round: 'round-of-32' }),
     ])
-    expect(goalsResult.slice(0, 2).map((entry) => entry.team)).toEqual(['Argentina', 'Brazil'])
+    expect(goalsResult.slice(0, 2).map((entry) => entry.team)).toEqual(['Netherlands', 'Brazil'])
 
     const alphabeticalResult = buildStandings([
       match('Brazil', '2', 'Scotland', '0', { winner: 'Brazil', round: 'round-of-32' }),
@@ -60,7 +69,7 @@ describe('fetchStandings', () => {
   it('requests the working ESPN URL and maps events', async () => {
     const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ events: [match('Brazil', '2', 'Germany', '1', { winner: 'Brazil', round: 'round-of-32' })] }) })
     vi.stubGlobal('fetch', fetchMock)
-    await expect(fetchStandings()).resolves.toEqual(expect.arrayContaining([expect.objectContaining({ team: 'Brazil', points: 3 })]))
+    await expect(fetchStandings()).resolves.toEqual(expect.arrayContaining([expect.objectContaining({ team: 'Brazil', points: 4 })]))
     expect(fetchMock).toHaveBeenCalledWith(SCOREBOARD_URL, { signal: undefined })
     expect(SCOREBOARD_URL).toContain('dates=20260628-20260719')
   })

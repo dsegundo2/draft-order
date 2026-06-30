@@ -46,6 +46,7 @@ export function buildStandings(events: EspnEvent[]): ManagerStanding[] {
       const goalsAgainst = Number.parseInt(opponent?.score ?? '0', 10) || 0
       standing.goalsFor += goalsFor
       standing.goalsAgainst += goalsAgainst
+      standing.points += goalsFor * 0.5
       if (current.winner) {
         standing.wins += 1
         standing.points += 3

@@ -5,8 +5,8 @@ type Props = { standing: ManagerStanding; onBack: () => void }
 
 export function TeamDetail({ standing, onBack }: Props) {
   const progress: ProgressStep[] = standing.progress
-  const completedPoints = progress.reduce((sum, step) => sum + (step.points ?? 0), 0)
-  const winPoints = Math.max(standing.points - completedPoints, 0)
+  const knockoutWinPoints = progress.reduce((sum, step) => sum + (step.points ?? 0), 0)
+  const goalPoints = Math.max(standing.points - knockoutWinPoints, 0)
 
   return (
     <section className={standing.eliminated ? 'team-detail dark' : 'team-detail'} aria-label={`${standing.team} details`}>
@@ -50,8 +50,8 @@ export function TeamDetail({ standing, onBack }: Props) {
 
       <div className="breakdown panel">
         <h3>Points breakdown</h3>
-        <p><span>Match points</span><strong>{winPoints}</strong></p>
-        <p><span>Knockout wins</span><strong>{completedPoints}</strong></p>
+        <p><span>Goal points</span><strong>{goalPoints}</strong></p>
+        <p><span>Knockout wins</span><strong>{knockoutWinPoints}</strong></p>
         <p className="total"><span>Total</span><strong>{standing.points}</strong></p>
       </div>
     </section>
