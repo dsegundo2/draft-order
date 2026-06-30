@@ -63,10 +63,33 @@ test('mobile standings have separated columns and detail returns cleanly', async
   expect(layout.team.top).toBeGreaterThan(layout.manager.top)
   expect(layout.wins.left - layout.points.right).toBeGreaterThanOrEqual(7)
   expect(layout.goals.left - layout.wins.right).toBeGreaterThanOrEqual(7)
+  const density = await page.evaluate(() => {
+    const header = document.querySelector('.app-header').getBoundingClientRect()
+    const leaderboard = document.querySelector('.leaderboard').getBoundingClientRect()
+    const row = document.querySelector('.row').getBoundingClientRect()
+    const legend = document.querySelector('.legend').getBoundingClientRect()
+    return { headerTop: header.top, headerHeight: header.height, leaderboardTop: leaderboard.top, rowHeight: row.height, legendHeight: legend.height }
+  })
+  expect(density.headerTop).toBeLessThanOrEqual(20)
+  expect(density.headerHeight).toBeLessThanOrEqual(170)
+  expect(density.leaderboardTop).toBeLessThanOrEqual(205)
+  expect(density.rowHeight).toBeLessThanOrEqual(56)
+  expect(density.legendHeight).toBeLessThanOrEqual(52)
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
   await page.getByRole('button', { name: /View Ryan L/ }).click()
   await expect(page.getByRole('heading', { name: 'Germany' })).toBeVisible()
   await expect(page.getByLabel('Germany details').getByText('Eliminated', { exact: true })).toBeVisible()
+  const detailDensity = await page.getByLabel('Germany details').evaluate((detail) => {
+    const header = detail.querySelector('.detail-header').getBoundingClientRect()
+    const stats = detail.querySelector('.stat-strip').getBoundingClientRect()
+    const back = detail.querySelector('.back-button').getBoundingClientRect()
+    return { headerTop: header.top, headerHeight: header.height, statsHeight: stats.height, backWidth: back.width, backHeight: back.height }
+  })
+  expect(detailDensity.headerTop).toBeLessThanOrEqual(56)
+  expect(detailDensity.headerHeight).toBeLessThanOrEqual(92)
+  expect(detailDensity.statsHeight).toBeLessThanOrEqual(82)
+  expect(detailDensity.backWidth).toBeGreaterThanOrEqual(44)
+  expect(detailDensity.backHeight).toBeGreaterThanOrEqual(44)
   await page.getByRole('button', { name: 'Back to standings' }).click()
   await expect(page.getByRole('heading', { name: 'Fantasy Order 2026' })).toBeVisible()
 })
@@ -75,6 +98,42 @@ test('320px standings do not overflow', async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 568 })
   await mockEspn(page)
   await page.goto('/')
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
+  const compact = await page.evaluate(() => ({
+    headerBottom: document.querySelector('.app-header').getBoundingClientRect().bottom,
+    leaderboardTop: document.querySelector('.leaderboard').getBoundingClientRect().top,
+    legendWidth: document.querySelector('.legend').getBoundingClientRect().width,
+    viewportWidth: window.innerWidth,
+  }))
+  expect(compact.headerBottom).toBeLessThanOrEqual(174)
+  expect(compact.leaderboardTop).toBeLessThanOrEqual(186)
+  expect(compact.legendWidth).toBeLessThanOrEqual(compact.viewportWidth - 24)
+})
+
+test('long future game metadata stays contained on narrow mobile', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 568 })
+  await mockEspn(page, { events: [{
+    date: '2099-07-10T23:30:00Z',
+    status: { type: { completed: false, state: 'pre' } },
+    competitions: [{ competitors: [
+      { team: { displayName: 'Brazil' } },
+      { team: { displayName: 'Bosnia and Herzegovina' } },
+    ] }],
+  }] })
+  await page.goto('/')
+  const metadata = page.locator('.next-match').first()
+  await expect(metadata).toBeVisible()
+  await expect(metadata).toContainText('Bosnia and Herzegovina')
+  const containment = await metadata.evaluate((element) => {
+    const metadataBox = element.getBoundingClientRect()
+    const teamBox = element.closest('.team').getBoundingClientRect()
+    return {
+      contained: metadataBox.left >= teamBox.left && metadataBox.right <= teamBox.right,
+      ellipsis: getComputedStyle(element).textOverflow,
+      overflow: getComputedStyle(element).overflow,
+    }
+  })
+  expect(containment).toEqual({ contained: true, ellipsis: 'ellipsis', overflow: 'hidden' })
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
 })
 

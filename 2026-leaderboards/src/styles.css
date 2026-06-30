@@ -124,10 +124,10 @@ svg { width: 1.25rem; height: 1.25rem; fill: none; stroke: currentColor; stroke-
 
 @media (max-width: 960px) {
   .app { width: 100%; padding: 0; display: block; }
-  .standings-view { min-height: 100vh; padding: 32px clamp(18px, 4vw, 42px) 30px; }
-  .app-header { min-height: 190px; margin-bottom: 20px; padding: 22px; border-radius: 18px; background-position: 57% center; }
-  .app-header h1 { max-width: 240px; font-size: 27px; line-height: 1.02; }
-  .updated { left: 22px; bottom: 20px; max-width: 240px; font-size: 10px; }
+  .standings-view { min-height: 100vh; padding: 20px clamp(18px, 4vw, 42px) 24px; }
+  .app-header { min-height: 170px; margin-bottom: 14px; padding: 20px; border-radius: 17px; background-position: 57% center; }
+  .app-header h1 { max-width: 250px; font-size: 28px; line-height: 1.02; }
+  .updated { left: 20px; bottom: 17px; max-width: 240px; font-size: 10px; }
   .refresh { margin-top: 0; padding: 9px; }
   .refresh span { display: none; }
   .leaderboard { border-radius: 11px; }
@@ -138,8 +138,8 @@ svg { width: 1.25rem; height: 1.25rem; fill: none; stroke: currentColor; stroke-
   .table-head .manager { grid-column: 2; }
   .table-head .manager::after { content: ' / Team'; }
   .table-head .team { display: none; }
-  .row { min-height: 60px; grid-template-rows: auto auto; align-content: center; }
-  .row .points::before { height: 60px; }
+  .row { min-height: 56px; grid-template-rows: auto auto; align-content: center; }
+  .row .points::before { height: 56px; }
   .row .rank { grid-column: 1; grid-row: 1 / 3; align-self: center; }
   .row .manager { grid-column: 2; grid-row: 1; align-self: end; }
   .row .team { grid-column: 2; grid-row: 2; align-self: start; }
@@ -147,18 +147,25 @@ svg { width: 1.25rem; height: 1.25rem; fill: none; stroke: currentColor; stroke-
   .row .points, .table-head .points { grid-column: 3; }
   .row .wins, .table-head .wins { grid-column: 4; }
   .row .goals, .table-head .goals { grid-column: 5; }
-  .rank, .manager, .team, .wins, .goals { font-size: 12px; }
+  .rank, .team, .wins, .goals { font-size: 12px; }
   .points { font-size: 14px; }
-  .row .manager { font-weight: 650; }
+  .row .manager { font-size: 13px; font-weight: 650; }
   .row .team-name { color: var(--muted); font-size: 11px; }
-  .row .today-match { max-width: 48%; font-size: 9px; }
+  .row .team { min-width: 0; overflow: hidden; }
+  .row .team-name { flex: 0 1 auto; min-width: 0; }
+  .row .today-match, .row .next-match { max-width: 52%; flex: 1 1 auto; min-width: 0; font-size: 9px; }
   .team { gap: 7px; }
   .flag { width: 19px; height: 16px; font-size: 16px; }
-  .legend { justify-content: center; gap: 32px; padding-inline: 8px; }
+  .legend { min-height: 48px; justify-content: center; gap: 18px; padding: 8px; }
+  .legend span { min-width: 0; line-height: 1.25; }
   .team-detail { display: none; }
   .detail-open .standings-view { display: none; }
-  .detail-open .team-detail { display: block; min-height: 100vh; padding: 72px 18px 34px; }
-  .back-button { display: inline-grid; place-items: center; position: absolute; top: 31px; left: 15px; }
+  .detail-open .team-detail { display: block; min-height: 100vh; padding: 56px 18px 28px; }
+  .back-button { display: inline-grid; place-items: center; position: absolute; top: 8px; left: 12px; width: 44px; height: 44px; }
+  .detail-header { min-height: 92px; padding-block: 14px; }
+  .stat-strip { margin-bottom: 10px; }
+  .stat-strip div { min-height: 78px; }
+  .progress, .summary, .breakdown, .elimination, .game-preview { margin-top: 10px; padding: 14px; }
   .dark { color: #f5f7fa; background: #0d1621; }
   .dark .panel { color: #f5f7fa; background: #17222e; border-color: #25313e; }
   .dark .detail-header p, .dark .step-name small, .dark .summary span, .dark .breakdown p { color: #c3cbd5; }
@@ -171,10 +178,18 @@ svg { width: 1.25rem; height: 1.25rem; fill: none; stroke: currentColor; stroke-
 }
 
 @media (max-width: 400px) {
-  .standings-view { padding-inline: 12px; }
+  .standings-view { padding: 14px 12px 20px; }
+  .app-header { min-height: 160px; margin-bottom: 12px; padding: 18px; }
+  .app-header h1 { font-size: 27px; }
+  .updated { left: 18px; bottom: 15px; }
   .table-head, .row { grid-template-columns: 22px minmax(0, 1fr) 34px 26px 30px; column-gap: 7px; padding-inline: 8px; }
-  .rank, .manager, .team, .wins, .goals, .points { font-size: 11px; }
+  .rank, .team, .wins, .goals, .points { font-size: 11px; }
+  .row .manager { font-size: 12px; }
   .team { gap: 5px; }
+  .row .today-match, .row .next-match { max-width: 48%; }
+  .legend { gap: 12px; font-size: 11px; }
+  .status-dot { flex: 0 0 auto; }
+  .detail-open .team-detail { padding-inline: 12px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
