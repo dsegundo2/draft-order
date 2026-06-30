@@ -5,11 +5,13 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "preview": "vite preview",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "test": "vitest run src",
     "test:integration": "RUN_LIVE_ESPN=1 vitest run src/data/espn.live.test.ts",
-    "test:ui": "playwright test --config=playwright.config.cjs --project=chromium"
+    "test:ui": "playwright test --config=playwright.config.cjs --project=chromium",
+    "generate:social-preview": "node scripts/generate-social-preview.mjs"
   },
   "dependencies": {
     "react": "^19.1.0",

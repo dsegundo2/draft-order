@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { Leaderboard } from './components/Leaderboard'
 import { RefreshIcon } from './components/Icons'
 import { TeamDetail } from './components/TeamDetail'
+import { SocialPreview } from './components/SocialPreview'
 import { fetchStandings } from './data/espn'
 import type { ManagerStanding } from './types'
 import './styles.css'
@@ -9,6 +10,7 @@ import './styles.css'
 const updateFormatter = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZoneName: 'short' })
 
 export default function App() {
+  const socialPreview = new URLSearchParams(window.location.search).has('social-preview')
   const [standings, setStandings] = useState<ManagerStanding[] | null>(null)
   const [selectedManager, setSelectedManager] = useState('Ryan L.')
   const [mobileDetailOpen, setMobileDetailOpen] = useState(false)
@@ -52,6 +54,11 @@ export default function App() {
   const closeDetail = () => {
     setMobileDetailOpen(false)
     requestAnimationFrame(() => window.scrollTo({ top: 0 }))
+  }
+
+  if (socialPreview) {
+    if (standings && updatedAt) return <SocialPreview standings={standings} updatedAt={updatedAt} />
+    return <main className="social-preview preview-loading" aria-label="Fantasy Order leaderboard preview">Loading current standings…</main>
   }
 
   return (

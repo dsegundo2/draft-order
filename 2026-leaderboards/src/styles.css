@@ -160,3 +160,21 @@ svg { width: 1.25rem; height: 1.25rem; fill: none; stroke: currentColor; stroke-
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+
+.social-preview { width: 1200px; height: 630px; overflow: hidden; padding: 30px; color: var(--ink); background: #f5f7f8; }
+.preview-loading { display: grid; place-items: center; font-size: 24px; }
+.preview-header { height: 150px; display: flex; justify-content: space-between; align-items: flex-end; padding: 30px 34px; border-radius: 22px; color: #fff; background: #07172a url('/fantasy-order-header.png') center 42% / cover no-repeat; box-shadow: 0 12px 30px rgba(10,32,47,.15); }
+.preview-header h1 { max-width: 700px; margin: 0; font-size: 46px; line-height: 1; letter-spacing: -.04em; text-transform: uppercase; text-shadow: 0 2px 18px rgba(0,0,0,.45); }
+.preview-header h1 span { white-space: nowrap; }
+.preview-header p { margin: 0; color: rgba(255,255,255,.82); font-size: 15px; text-shadow: 0 1px 10px rgba(0,0,0,.6); }
+.preview-standings { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 18px; }
+.preview-column { overflow: hidden; border: 1px solid #dfe4e9; border-radius: 15px; background: #fff; box-shadow: 0 6px 18px rgba(10,32,47,.06); }
+.preview-head, .preview-row { display: grid; grid-template-columns: 30px minmax(0,1fr) 42px 34px 38px; column-gap: 12px; align-items: center; padding: 0 17px; }
+.preview-head { height: 34px; color: #5f6b80; font-size: 10px; font-weight: 750; text-transform: uppercase; }
+.preview-row { height: 66px; border-top: 1px solid #e7eaee; font-size: 14px; font-variant-numeric: tabular-nums; }
+.preview-row > :nth-last-child(-n+3), .preview-head > :nth-last-child(-n+3) { text-align: right; }
+.preview-identity { min-width: 0; display: grid; gap: 3px; }
+.preview-identity b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 15px; }
+.preview-identity small { color: #5f6b80; font-size: 11px; }
+.preview-row.is-eliminated { color: #9aa2af; background: #f6f7f8; }
+.preview-row.is-eliminated .preview-identity small { color: #a5acb7; }

@@ -69,3 +69,13 @@ test('320px standings do not overflow', async ({ page }) => {
   await page.goto('/')
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
 })
+
+test('social preview renders all current rows and eliminated styling', async ({ page }) => {
+  await page.setViewportSize({ width: 1200, height: 630 })
+  await mockEspn(page)
+  await page.goto('/?social-preview=1')
+  await expect(page.getByRole('main', { name: 'Fantasy Order leaderboard preview' })).toBeVisible()
+  await expect(page.locator('.preview-row')).toHaveCount(12)
+  await expect(page.locator('.preview-row.is-eliminated')).toHaveCount(1)
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth && document.documentElement.scrollHeight <= window.innerHeight)).toBe(true)
+})

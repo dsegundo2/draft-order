@@ -4,6 +4,8 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+  schedule:
+    - cron: '*/15 * * * *'
 
 permissions:
   contents: read
@@ -34,6 +36,12 @@ jobs:
       - run: npm test
         working-directory: 2026-leaderboards
       - run: npm run build
+        working-directory: 2026-leaderboards
+      - run: |
+          npm run preview -- --host 127.0.0.1 --port 4173 &
+          preview_pid=$!
+          trap 'kill $preview_pid' EXIT
+          npm run generate:social-preview
         working-directory: 2026-leaderboards
       - run: |
           mkdir -p site site/2026-leaderboards
