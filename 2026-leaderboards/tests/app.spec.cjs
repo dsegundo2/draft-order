@@ -89,5 +89,11 @@ test('social preview renders all current rows and eliminated styling', async ({ 
   await expect(page.locator('.preview-head').first()).not.toContainText('GF')
   await expect(page.locator('.preview-head').first()).not.toContainText('W')
   await expect(page.locator('.preview-header')).toContainText('🏆')
+  await expect(page.locator('.preview-header p')).toContainText('PT')
+  const previewChrome = await page.locator('.preview-column').first().evaluate((element) => {
+    const styles = getComputedStyle(element)
+    return { borderWidth: styles.borderTopWidth, boxShadow: styles.boxShadow }
+  })
+  expect(previewChrome).toEqual({ borderWidth: '0px', boxShadow: 'none' })
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth && document.documentElement.scrollHeight <= window.innerHeight)).toBe(true)
 })

@@ -3,14 +3,20 @@ import type { ManagerStanding } from '../types'
 type Props = { standings: ManagerStanding[]; updatedAt: Date }
 
 export function SocialPreview({ standings, updatedAt }: Props) {
-  const updated = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZoneName: 'short' }).format(updatedAt)
+  const updated = new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    timeZone: 'America/Los_Angeles',
+  }).format(updatedAt)
   const columns = [standings.slice(0, 6), standings.slice(6, 12)]
 
   return (
     <main className="social-preview is-ready" aria-label="Fantasy Order leaderboard preview">
       <header className="preview-header">
         <h1>Fantasy Order 2026 <span aria-hidden="true">🏆</span></h1>
-        <p>Updated {updated}</p>
+        <p>Updated {updated} PT</p>
       </header>
       <section className="preview-standings" aria-label="Current standings">
         {columns.map((column, columnIndex) => (
