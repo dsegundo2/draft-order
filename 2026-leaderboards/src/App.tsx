@@ -3,27 +3,28 @@ import { Leaderboard } from './components/Leaderboard'
 import { RefreshIcon } from './components/Icons'
 import { TeamDetail } from './components/TeamDetail'
 import { fetchStandings } from './data/espn'
-import { seededStandings } from './data/teams'
 import type { ManagerStanding } from './types'
 import './styles.css'
 
 const updateFormatter = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZoneName: 'short' })
 
 export default function App() {
-  const [standings, setStandings] = useState(seededStandings)
+  const [standings, setStandings] = useState<ManagerStanding[] | null>(null)
   const [selectedManager, setSelectedManager] = useState('Ryan L.')
   const [mobileDetailOpen, setMobileDetailOpen] = useState(false)
-  const [updatedAt, setUpdatedAt] = useState(new Date('2026-06-07T08:41:00-05:00'))
-  const [loading, setLoading] = useState(false)
+  const [updatedAt, setUpdatedAt] = useState<Date | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   const refresh = useCallback(async () => {
     setLoading(true)
+    setError(null)
     try {
       const next = await fetchStandings()
       setStandings(next)
       setUpdatedAt(new Date())
     } catch {
-      // Keep the seeded standings visible when ESPN is unavailable.
+      setError('Live ESPN data is temporarily unavailable. No fallback standings are being shown.')
     } finally {
       setLoading(false)
     }
@@ -31,14 +32,17 @@ export default function App() {
 
   useEffect(() => {
     const controller = new AbortController()
-    fetchStandings(controller.signal).then((next) => {
-      setStandings(next)
-      setUpdatedAt(new Date())
-    }).catch(() => undefined)
-    return () => controller.abort()
+    const load = () => fetchStandings(controller.signal).then((next) => {
+      setStandings(next); setUpdatedAt(new Date()); setError(null)
+    }).catch((reason: unknown) => {
+      if (!(reason instanceof DOMException && reason.name === 'AbortError')) setError('Live ESPN data is temporarily unavailable. No fallback standings are being shown.')
+    }).finally(() => setLoading(false))
+    load()
+    const interval = window.setInterval(load, 5 * 60 * 1000)
+    return () => { controller.abort(); window.clearInterval(interval) }
   }, [])
 
-  const selected = standings.find((standing) => standing.manager === selectedManager) ?? standings[0]
+  const selected = standings?.find((standing) => standing.manager === selectedManager) ?? standings?.[0]
   const selectStanding = (standing: ManagerStanding) => {
     setSelectedManager(standing.manager)
     setMobileDetailOpen(true)
@@ -55,15 +59,17 @@ export default function App() {
       <section className="standings-view">
         <header className="app-header">
           <div>
-            <h1>World Cup 2026</h1>
-            <p className="live-label"><span />Standings</p>
-            <p className="updated">Updated: {updateFormatter.format(updatedAt)}</p>
+            <h1>Fantasy Border 2026</h1>
+            <p className="header-copy">Twelve managers. One global race for the top.</p>
+            {updatedAt ? <p className="updated">Live from ESPN · Updated {updateFormatter.format(updatedAt)}</p> : null}
           </div>
           <button className={loading ? 'refresh is-loading' : 'refresh'} onClick={refresh} type="button" disabled={loading}>
             <RefreshIcon /><span>{loading ? 'Updating' : 'Refresh'}</span>
           </button>
         </header>
-        <Leaderboard standings={standings} selected={selected} onSelect={selectStanding} />
+        {error && !standings ? <div className="data-state error-state" role="alert"><strong>We couldn't reach ESPN.</strong><span>{error}</span><button type="button" onClick={refresh}>Try again</button></div> : null}
+        {loading && !standings ? <div className="data-state" role="status">Loading live ESPN results…</div> : null}
+        {standings ? <Leaderboard standings={standings} selected={selected} onSelect={selectStanding} /> : null}
       </section>
       {selected ? <TeamDetail standing={selected} onBack={closeDetail} /> : null}
     </main>

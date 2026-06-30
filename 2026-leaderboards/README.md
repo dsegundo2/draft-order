@@ -2,7 +2,7 @@
 
 Static React/Vite leaderboard deployed under `/2026-leaderboards/` on GitHub Pages.
 
-The app reads completed World Cup matches from ESPN's scoreboard endpoint, calculates manager standings, and falls back to the seeded design data when the endpoint is unavailable. Manager/team configuration lives in `src/data/teams.ts`.
+The app reads completed World Cup matches directly from ESPN's scoreboard endpoint and calculates manager standings in browser memory. It does not persist results or show fallback scores; an ESPN failure produces an explicit unavailable state. Only the manager/team assignments live in `src/data/teams.ts`.
 
 ```bash
 npm install

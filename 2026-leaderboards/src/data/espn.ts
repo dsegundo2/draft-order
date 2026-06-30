@@ -1,26 +1,40 @@
-import { seededStandings } from './teams'
+import { teamAssignments } from './teams'
 import type { ManagerStanding, ProgressStep } from '../types'
 
-const SCOREBOARD_URL = 'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/fifa-world-cup/scoreboard?limit=500&dates=2026'
-const KNOCKOUT_ROUNDS = ['round of 16', 'quarterfinal', 'semifinal', 'final']
+export const SCOREBOARD_URL = 'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?limit=500&dates=2026'
+const KNOCKOUT_ROUNDS = new Set(['round-of-32', 'round-of-16', 'quarterfinals', 'semifinals', '3rd-place-match', 'final'])
+const ROUND_NAMES: Record<string, string> = { 'round-of-32': 'Round of 32', 'round-of-16': 'Round of 16', quarterfinals: 'Quarterfinals', semifinals: 'Semifinals', '3rd-place-match': 'Third-place match', final: 'Final' }
 
 type EspnCompetitor = { winner?: boolean; score?: string; team?: { displayName?: string } }
 type EspnEvent = {
   name?: string
   status?: { type?: { completed?: boolean } }
   competitions?: Array<{ competitors?: EspnCompetitor[]; notes?: Array<{ headline?: string }> }>
+  season?: { slug?: string }
 }
 
 export function buildStandings(events: EspnEvent[]): ManagerStanding[] {
-  const byTeam = new Map(seededStandings.map((entry) => [entry.espnName.toLowerCase(), { ...entry, points: 0, wins: 0, goalsFor: 0, goalsAgainst: 0, progress: [] as ProgressStep[], eliminated: false }]))
+  const byTeam = new Map(teamAssignments.map((entry) => [entry.espnName.toLowerCase(), { ...entry, points: 0, wins: 0, goalsFor: 0, goalsAgainst: 0, progress: [] as ProgressStep[], eliminated: false }]))
+  const knockoutTeams = new Set<string>()
+  const groupEvents = events.filter((event) => event.season?.slug === 'group-stage')
+  const groupStageComplete = groupEvents.length > 0 && groupEvents.every((event) => event.status?.type?.completed)
+
+  for (const event of events) {
+    if (!KNOCKOUT_ROUNDS.has(event.season?.slug ?? '')) continue
+    for (const competitor of event.competitions?.[0]?.competitors ?? []) {
+      const name = competitor.team?.displayName?.toLowerCase()
+      if (name && byTeam.has(name)) knockoutTeams.add(name)
+    }
+  }
 
   for (const event of events) {
     if (!event.status?.type?.completed) continue
     const competition = event.competitions?.[0]
     const competitors = competition?.competitors ?? []
     if (competitors.length !== 2) continue
-    const round = competition?.notes?.[0]?.headline ?? ''
-    const isKnockout = KNOCKOUT_ROUNDS.some((label) => round.toLowerCase().includes(label))
+    const roundSlug = event.season?.slug ?? ''
+    const isKnockout = KNOCKOUT_ROUNDS.has(roundSlug)
+    const round = ROUND_NAMES[roundSlug] ?? competition?.notes?.[0]?.headline ?? 'Knockout round'
 
     for (const current of competitors) {
       const currentName = current.team?.displayName?.toLowerCase()
@@ -34,7 +48,7 @@ export function buildStandings(events: EspnEvent[]): ManagerStanding[] {
       if (current.winner) {
         standing.wins += 1
         standing.points += 3
-      } else if (goalsFor === goalsAgainst) {
+      } else if (!isKnockout && goalsFor === goalsAgainst) {
         standing.points += 1
       } else if (isKnockout) {
         standing.eliminated = true
@@ -48,6 +62,12 @@ export function buildStandings(events: EspnEvent[]): ManagerStanding[] {
           complete: true,
         })
       }
+    }
+  }
+
+  if (groupStageComplete) {
+    for (const [name, standing] of byTeam) {
+      if (!knockoutTeams.has(name)) standing.eliminated = true
     }
   }
 

@@ -19,14 +19,15 @@ button { font: inherit; }
 svg { width: 1.25rem; height: 1.25rem; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .app { width: min(1440px, 100%); min-height: 100vh; margin: 0 auto; padding: 42px; display: grid; grid-template-columns: minmax(640px, 1.65fr) minmax(360px, .85fr); gap: 16px; }
 .standings-view { min-width: 0; }
-.app-header { min-height: 126px; display: flex; justify-content: space-between; align-items: flex-start; padding: 5px 3px 24px; }
-.app-header h1 { margin: 0 0 8px; color: #090d14; font-size: 22px; line-height: 1; letter-spacing: -.02em; text-transform: uppercase; }
+.app-header { position: relative; min-height: 126px; display: flex; justify-content: space-between; align-items: flex-start; overflow: hidden; margin-bottom: 18px; padding: 25px 28px; border-radius: 18px; color: #fff; background: linear-gradient(125deg, #07172a 0%, #0b2c3a 58%, #087a45 145%); box-shadow: 0 16px 38px rgba(10, 32, 47, .16); }
+.app-header::after { content: ''; position: absolute; width: 190px; height: 190px; right: 82px; top: -104px; border: 24px solid rgba(255,255,255,.055); border-radius: 50%; }
+.app-header > * { position: relative; z-index: 1; }
+.app-header h1 { margin: 0 0 11px; color: #fff; font-size: clamp(24px, 2.6vw, 36px); line-height: 1; letter-spacing: -.035em; text-transform: uppercase; }
 .app-header p { margin: 0; }
-.live-label { color: var(--green); font-size: 16px; line-height: 1.3; }
-.live-label span { display: none; }
-.updated { margin-top: 7px !important; color: var(--muted); font-size: 14px; }
-.refresh { margin-top: 19px; border: 0; background: none; color: var(--ink); display: inline-flex; align-items: center; gap: 8px; padding: 8px; cursor: pointer; font-size: 13px; }
-.refresh:hover { color: var(--green); }
+.header-copy { color: rgba(255,255,255,.82); font-size: 15px; line-height: 1.4; }
+.updated { margin-top: 12px !important; color: rgba(255,255,255,.62); font-size: 12px; }
+.refresh { margin-top: 10px; border: 1px solid rgba(255,255,255,.22); border-radius: 999px; background: rgba(255,255,255,.1); color: #fff; display: inline-flex; align-items: center; gap: 8px; padding: 9px 13px; cursor: pointer; font-size: 12px; backdrop-filter: blur(8px); }
+.refresh:hover { border-color: rgba(255,255,255,.5); background: rgba(255,255,255,.16); }
 .refresh:focus-visible, .row:focus-visible, .back-button:focus-visible { outline: 3px solid rgba(17,148,71,.25); outline-offset: 2px; }
 .refresh.is-loading svg { animation: spin .8s linear infinite; }
 @keyframes spin { to { transform: rotate(1turn); } }
@@ -43,6 +44,7 @@ svg { width: 1.25rem; height: 1.25rem; fill: none; stroke: currentColor; stroke-
 .row.is-selected { border-left-color: var(--green); background: #fbfdfb; }
 .is-eliminated .row { color: #8b93a2; background: #fafafa; }
 .is-eliminated .row:hover { background: #f5f5f5; }
+.is-eliminated .row.is-selected { border-left-color: #9ba3b0; }
 .rank, .manager, .team, .wins, .goals { font-size: 14px; }
 .team { min-width: 0; display: flex; align-items: center; gap: 12px; }
 .team > span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -53,6 +55,10 @@ svg { width: 1.25rem; height: 1.25rem; fill: none; stroke: currentColor; stroke-
 .legend span { display: flex; align-items: center; gap: 8px; }
 .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #aeb5c1; }
 .status-dot.active { background: var(--green); }
+.data-state { min-height: 260px; display: grid; place-items: center; align-content: center; gap: 9px; padding: 30px; border: 1px solid var(--rule); border-radius: 14px; color: var(--muted); text-align: center; }
+.data-state strong { color: var(--ink); font-size: 18px; }
+.data-state span { max-width: 460px; font-size: 14px; line-height: 1.5; }
+.data-state button { margin-top: 8px; padding: 9px 16px; border: 0; border-radius: 999px; background: var(--ink); color: #fff; cursor: pointer; }
 
 .team-detail { position: relative; padding-top: 126px; }
 .back-button { display: none; border: 0; background: none; color: inherit; padding: 6px; cursor: pointer; }
@@ -68,8 +74,9 @@ svg { width: 1.25rem; height: 1.25rem; fill: none; stroke: currentColor; stroke-
 .stat-strip div { min-height: 92px; display: grid; place-items: center; align-content: center; border-right: 1px solid var(--rule); }
 .stat-strip div:last-child { border-right: 0; }
 .stat-strip strong { color: var(--green); font-size: 27px; line-height: 1; }
-  .dark .stat-strip strong { color: #fff; }
-  .dark .stat-strip div:first-child strong { color: var(--red); }
+.team-detail.dark .stat-strip strong { color: var(--ink); }
+.team-detail.dark .stat-strip div:first-child strong { color: var(--red); }
+.team-detail.dark .step-result, .team-detail.dark .step-result small { color: var(--red); }
 .stat-strip span { margin-top: 9px; font-size: 10px; text-transform: uppercase; }
 .progress, .summary, .breakdown, .elimination { margin-top: 14px; padding: 16px; }
 .panel h3 { margin: 0 0 11px; font-size: 12px; text-transform: uppercase; }
@@ -103,12 +110,14 @@ svg { width: 1.25rem; height: 1.25rem; fill: none; stroke: currentColor; stroke-
 @media (max-width: 760px) {
   .app { width: 100%; padding: 0; display: block; }
   .standings-view { min-height: 100vh; padding: 42px 18px 30px; }
-  .app-header { min-height: 143px; padding: 4px 6px 18px; }
-  .app-header h1 { font-size: 20px; }
-  .refresh { margin-top: 20px; }
+  .app-header { min-height: 165px; margin-bottom: 20px; padding: 24px 22px; border-radius: 16px; }
+  .app-header h1 { max-width: 240px; font-size: 27px; line-height: 1.02; }
+  .header-copy { max-width: 230px; font-size: 13px; }
+  .updated { max-width: 240px; font-size: 10px; }
+  .refresh { margin-top: 0; padding: 9px; }
   .refresh span { display: none; }
   .leaderboard { border-radius: 11px; }
-  .table-head, .row { grid-template-columns: 31px minmax(67px, .9fr) minmax(113px, 1.45fr) 34px 32px 40px; padding-inline: 10px; }
+  .table-head, .row { grid-template-columns: 26px 68px minmax(104px, 1fr) 38px 30px 38px; column-gap: 7px; padding-inline: 10px; }
   .table-head { font-size: 10px; }
   .row { min-height: 49px; }
   .rank, .manager, .team, .wins, .goals, .points { font-size: 12px; }
@@ -124,6 +133,7 @@ svg { width: 1.25rem; height: 1.25rem; fill: none; stroke: currentColor; stroke-
   .dark .detail-header p, .dark .step-name small, .dark .summary span, .dark .breakdown p { color: #c3cbd5; }
   .dark .step-icon { background: #17222e; border-color: #8995a5; }
   .dark .complete .step-icon { color: #fff; background: var(--red); border-color: var(--red); }
+  .dark .stat-strip strong { color: #fff; }
   .dark .step-result, .dark .step-result small { color: var(--red); }
   .dark .summary strong { color: #fff; }
   .dark .stat-strip div, .dark .summary span + span, .dark .breakdown .total { border-color: #2a3643; }
@@ -131,7 +141,7 @@ svg { width: 1.25rem; height: 1.25rem; fill: none; stroke: currentColor; stroke-
 
 @media (max-width: 400px) {
   .standings-view { padding-inline: 12px; }
-  .table-head, .row { grid-template-columns: 27px 62px minmax(94px, 1fr) 29px 27px 31px; padding-inline: 6px; }
+  .table-head, .row { grid-template-columns: 23px 62px minmax(90px, 1fr) 34px 25px 32px; column-gap: 5px; padding-inline: 7px; }
   .rank, .manager, .team, .wins, .goals, .points { font-size: 11px; }
   .team { gap: 4px; }
   .flag { width: 20px; font-size: 18px; }

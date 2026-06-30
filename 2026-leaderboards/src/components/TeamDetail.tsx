@@ -3,15 +3,8 @@ import { BackIcon, CheckIcon } from './Icons'
 
 type Props = { standing: ManagerStanding; onBack: () => void }
 
-const defaultProgress: ProgressStep[] = [
-  { round: 'Round of 16', opponent: 'TBD', complete: false },
-  { round: 'Quarterfinals', opponent: '—', complete: false },
-  { round: 'Semifinals', opponent: '—', complete: false },
-  { round: 'Final', opponent: '—', complete: false },
-]
-
 export function TeamDetail({ standing, onBack }: Props) {
-  const progress = standing.progress.length ? standing.progress : defaultProgress
+  const progress: ProgressStep[] = standing.progress
   const completedPoints = progress.reduce((sum, step) => sum + (step.points ?? 0), 0)
   const winPoints = Math.max(standing.points - completedPoints, 0)
 
@@ -37,7 +30,7 @@ export function TeamDetail({ standing, onBack }: Props) {
         </div>
       ) : null}
 
-      <div className="progress panel">
+      {progress.length ? <div className="progress panel">
         <h3>Knockout progress</h3>
         <ol>
           {progress.map((step) => (
@@ -48,7 +41,7 @@ export function TeamDetail({ standing, onBack }: Props) {
             </li>
           ))}
         </ol>
-      </div>
+      </div> : null}
 
       <div className="summary panel">
         <h3>Summary</h3>

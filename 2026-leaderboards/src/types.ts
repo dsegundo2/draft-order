@@ -18,3 +18,5 @@ export type ManagerStanding = {
   eliminated: boolean
   progress: ProgressStep[]
 }
+
+export type TeamAssignment = Pick<ManagerStanding, 'manager' | 'team' | 'espnName' | 'flag'>

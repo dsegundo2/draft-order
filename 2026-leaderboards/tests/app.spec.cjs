@@ -1,22 +1,59 @@
 const { expect, test } = require('@playwright/test')
 
-test('shows standings and opens an eliminated manager detail', async ({ page }) => {
-  await page.route('**/scoreboard?**', (route) => route.abort())
-  await page.goto('/')
-  await expect(page.getByRole('heading', { name: 'World Cup 2026' })).toBeVisible()
-  await expect(page.getByRole('button', { name: /View Ryan H/ })).toBeVisible()
-  await page.getByRole('button', { name: /View Noah/ }).click()
-  await expect(page.getByRole('heading', { name: 'Mexico' })).toBeVisible()
-  await expect(page.getByText('Elimination match')).toBeVisible()
+const event = (a, aScore, b, bScore, { winner, round = 'group-stage', completed = true } = {}) => ({
+  season: { slug: round },
+  status: { type: { completed } },
+  competitions: [{ competitors: [
+    { winner: winner === a, score: String(aScore), team: { displayName: a } },
+    { winner: winner === b, score: String(bScore), team: { displayName: b } },
+  ] }],
 })
 
-test('mobile detail supports returning to the standings', async ({ page }) => {
-  await page.setViewportSize({ width: 390, height: 844 })
-  await page.route('**/scoreboard?**', (route) => route.abort())
+const payload = { events: [
+  event('Brazil', 2, 'Germany', 1, { winner: 'Brazil' }),
+  event('Brazil', 1, 'France', 1),
+  event('Germany', 1, 'Paraguay', 1, { winner: 'Paraguay', round: 'round-of-32' }),
+] }
+
+async function mockEspn(page, body = payload) {
+  await page.route('**/scoreboard?**', (route) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) }))
+}
+
+test('renders standings calculated from ESPN and opens accurate eliminated team detail', async ({ page }) => {
+  await mockEspn(page)
   await page.goto('/')
+  await expect(page).toHaveTitle('Fantasy Border 2026')
+  await expect(page.getByRole('heading', { name: 'Fantasy Border 2026' })).toBeVisible()
+  await expect(page.getByText(/Updated/)).toBeVisible()
+  await expect(page.getByRole('button', { name: /View Ryan H.*, 4 points/ })).toBeVisible()
+  await expect(page.getByRole('button', { name: /View Ryan L.*, 0 points/ })).toBeVisible()
   await page.getByRole('button', { name: /View Ryan L/ }).click()
   await expect(page.getByRole('heading', { name: 'Germany' })).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Back to standings' })).toBeVisible()
+  await expect(page.getByText('Elimination match')).toBeVisible()
+  await expect(page.getByLabel('Germany details').getByText('L 1–1').first()).toBeVisible()
+})
+
+test('shows an honest error with no fake standings when ESPN fails, then retries', async ({ page }) => {
+  await page.route('**/scoreboard?**', (route) => route.fulfill({ status: 503, body: '' }))
+  await page.goto('/')
+  await expect(page.getByRole('alert')).toContainText("couldn't reach ESPN")
+  await expect(page.getByRole('button', { name: /View Ryan H/ })).toHaveCount(0)
+  await page.unroute('**/scoreboard?**')
+  await mockEspn(page)
+  await page.getByRole('button', { name: 'Try again' }).click()
+  await expect(page.getByRole('button', { name: /View Ryan H.*, 4 points/ })).toBeVisible()
+})
+
+test('mobile standings have separated columns and detail returns cleanly', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await mockEspn(page)
+  await page.goto('/')
+  const boxes = await page.locator('.row').first().locator(':scope > span, :scope > strong').evaluateAll((cells) => cells.map((cell) => cell.getBoundingClientRect()).map(({ left, right }) => ({ left, right })))
+  for (let index = 1; index < boxes.length; index += 1) expect(boxes[index].left - boxes[index - 1].right).toBeGreaterThanOrEqual(4)
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
+  await page.getByRole('button', { name: /View Ryan L/ }).click()
+  await expect(page.getByRole('heading', { name: 'Germany' })).toBeVisible()
+  await expect(page.getByLabel('Germany details').getByText('Eliminated', { exact: true })).toBeVisible()
   await page.getByRole('button', { name: 'Back to standings' }).click()
-  await expect(page.getByRole('heading', { name: 'World Cup 2026' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Fantasy Border 2026' })).toBeVisible()
 })
