@@ -59,9 +59,8 @@ export default function App() {
       <section className="standings-view">
         <header className="app-header">
           <div>
-            <h1>Fantasy Border 2026</h1>
-            <p className="header-copy">Twelve managers. One global race for the top.</p>
-            {updatedAt ? <p className="updated">Live from ESPN · Updated {updateFormatter.format(updatedAt)}</p> : null}
+            <h1>Fantasy Order 2026 <span aria-hidden="true">🏈⚽</span></h1>
+            {updatedAt ? <p className="updated">Updated {updateFormatter.format(updatedAt)}</p> : null}
           </div>
           <button className={loading ? 'refresh is-loading' : 'refresh'} onClick={refresh} type="button" disabled={loading}>
             <RefreshIcon /><span>{loading ? 'Updating' : 'Refresh'}</span>

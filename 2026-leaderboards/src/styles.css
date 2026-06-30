@@ -19,13 +19,13 @@ button { font: inherit; }
 svg { width: 1.25rem; height: 1.25rem; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .app { width: min(1440px, 100%); min-height: 100vh; margin: 0 auto; padding: 42px; display: grid; grid-template-columns: minmax(640px, 1.65fr) minmax(360px, .85fr); gap: 16px; }
 .standings-view { min-width: 0; }
-.app-header { position: relative; min-height: 126px; display: flex; justify-content: space-between; align-items: flex-start; overflow: hidden; margin-bottom: 18px; padding: 25px 28px; border-radius: 18px; color: #fff; background: linear-gradient(125deg, #07172a 0%, #0b2c3a 58%, #087a45 145%); box-shadow: 0 16px 38px rgba(10, 32, 47, .16); }
-.app-header::after { content: ''; position: absolute; width: 190px; height: 190px; right: 82px; top: -104px; border: 24px solid rgba(255,255,255,.055); border-radius: 50%; }
+.app-header { position: relative; min-height: 220px; display: flex; justify-content: space-between; align-items: flex-start; overflow: hidden; margin-bottom: 18px; padding: 28px; border-radius: 24px; color: #fff; background: #07172a url('/fantasy-order-header.png') center / cover no-repeat; box-shadow: 0 16px 38px rgba(10, 32, 47, .16); }
 .app-header > * { position: relative; z-index: 1; }
-.app-header h1 { margin: 0 0 11px; color: #fff; font-size: clamp(24px, 2.6vw, 36px); line-height: 1; letter-spacing: -.035em; text-transform: uppercase; }
+.app-header > div { align-self: stretch; }
+.app-header h1 { max-width: 440px; margin: 0; color: #fff; font-size: clamp(24px, 2.6vw, 36px); line-height: 1.05; letter-spacing: -.035em; text-transform: uppercase; text-shadow: 0 2px 18px rgba(0,0,0,.35); }
+.app-header h1 span { white-space: nowrap; }
 .app-header p { margin: 0; }
-.header-copy { color: rgba(255,255,255,.82); font-size: 15px; line-height: 1.4; }
-.updated { margin-top: 12px !important; color: rgba(255,255,255,.62); font-size: 12px; }
+.updated { position: absolute; left: 28px; bottom: 25px; color: rgba(255,255,255,.78); font-size: 12px; text-shadow: 0 1px 10px rgba(0,0,0,.55); }
 .refresh { margin-top: 10px; border: 1px solid rgba(255,255,255,.22); border-radius: 999px; background: rgba(255,255,255,.1); color: #fff; display: inline-flex; align-items: center; gap: 8px; padding: 9px 13px; cursor: pointer; font-size: 12px; backdrop-filter: blur(8px); }
 .refresh:hover { border-color: rgba(255,255,255,.5); background: rgba(255,255,255,.16); }
 .refresh:focus-visible, .row:focus-visible, .back-button:focus-visible { outline: 3px solid rgba(17,148,71,.25); outline-offset: 2px; }
@@ -110,10 +110,9 @@ svg { width: 1.25rem; height: 1.25rem; fill: none; stroke: currentColor; stroke-
 @media (max-width: 760px) {
   .app { width: 100%; padding: 0; display: block; }
   .standings-view { min-height: 100vh; padding: 42px 18px 30px; }
-  .app-header { min-height: 165px; margin-bottom: 20px; padding: 24px 22px; border-radius: 16px; }
+  .app-header { min-height: 190px; margin-bottom: 20px; padding: 22px; border-radius: 18px; background-position: 57% center; }
   .app-header h1 { max-width: 240px; font-size: 27px; line-height: 1.02; }
-  .header-copy { max-width: 230px; font-size: 13px; }
-  .updated { max-width: 240px; font-size: 10px; }
+  .updated { left: 22px; bottom: 20px; max-width: 240px; font-size: 10px; }
   .refresh { margin-top: 0; padding: 9px; }
   .refresh span { display: none; }
   .leaderboard { border-radius: 11px; }

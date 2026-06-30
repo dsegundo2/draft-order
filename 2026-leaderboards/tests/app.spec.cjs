@@ -22,8 +22,8 @@ async function mockEspn(page, body = payload) {
 test('renders standings calculated from ESPN and opens accurate eliminated team detail', async ({ page }) => {
   await mockEspn(page)
   await page.goto('/')
-  await expect(page).toHaveTitle('Fantasy Border 2026')
-  await expect(page.getByRole('heading', { name: 'Fantasy Border 2026' })).toBeVisible()
+  await expect(page).toHaveTitle('Fantasy Order 2026')
+  await expect(page.getByRole('heading', { name: 'Fantasy Order 2026' })).toBeVisible()
   await expect(page.getByText(/Updated/)).toBeVisible()
   await expect(page.getByRole('button', { name: /View Ryan H.*, 3 points/ })).toBeVisible()
   await expect(page.getByRole('button', { name: /View Ryan L.*, 0 points/ })).toBeVisible()
@@ -55,5 +55,5 @@ test('mobile standings have separated columns and detail returns cleanly', async
   await expect(page.getByRole('heading', { name: 'Germany' })).toBeVisible()
   await expect(page.getByLabel('Germany details').getByText('Eliminated', { exact: true })).toBeVisible()
   await page.getByRole('button', { name: 'Back to standings' }).click()
-  await expect(page.getByRole('heading', { name: 'Fantasy Border 2026' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Fantasy Order 2026' })).toBeVisible()
 })
