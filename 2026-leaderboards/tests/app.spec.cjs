@@ -73,7 +73,7 @@ test('mobile standings have separated columns and detail returns cleanly', async
   expect(density.headerTop).toBeLessThanOrEqual(20)
   expect(density.headerHeight).toBeLessThanOrEqual(170)
   expect(density.leaderboardTop).toBeLessThanOrEqual(205)
-  expect(density.rowHeight).toBeLessThanOrEqual(56)
+  expect(density.rowHeight).toBeLessThanOrEqual(68)
   expect(density.legendHeight).toBeLessThanOrEqual(52)
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
   await page.getByRole('button', { name: /View Ryan L/ }).click()
@@ -98,6 +98,7 @@ test('320px standings do not overflow', async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 568 })
   await mockEspn(page)
   await page.goto('/')
+  await expect(page.getByRole('button', { name: /View Ryan H/ })).toBeVisible()
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
   const compact = await page.evaluate(() => ({
     headerBottom: document.querySelector('.app-header').getBoundingClientRect().bottom,
@@ -124,16 +125,17 @@ test('long future game metadata stays contained on narrow mobile', async ({ page
   const metadata = page.locator('.next-match').first()
   await expect(metadata).toBeVisible()
   await expect(metadata).toContainText('Bosnia and Herzegovina')
+  await expect(metadata.locator('time')).toHaveText('4:30 PM PT')
   const containment = await metadata.evaluate((element) => {
     const metadataBox = element.getBoundingClientRect()
     const teamBox = element.closest('.team').getBoundingClientRect()
     return {
       contained: metadataBox.left >= teamBox.left && metadataBox.right <= teamBox.right,
-      ellipsis: getComputedStyle(element).textOverflow,
-      overflow: getComputedStyle(element).overflow,
+      opponentEllipsis: getComputedStyle(element.querySelector('span')).textOverflow,
+      timeVisible: element.querySelector('time').getBoundingClientRect().right <= teamBox.right,
     }
   })
-  expect(containment).toEqual({ contained: true, ellipsis: 'ellipsis', overflow: 'hidden' })
+  expect(containment).toEqual({ contained: true, opponentEllipsis: 'ellipsis', timeVisible: true })
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
 })
 

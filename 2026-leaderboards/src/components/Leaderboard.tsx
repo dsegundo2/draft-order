@@ -14,7 +14,7 @@ export function Leaderboard({ standings, onSelect }: Props) {
       </div>
       <ol className="table-body">
         {standings.map((standing, index) => (
-          <li key={standing.manager} className={[standing.eliminated ? 'is-eliminated' : '', standing.gameToday ? 'has-game-today' : ''].filter(Boolean).join(' ')}>
+          <li key={standing.manager} className={[standing.eliminated ? 'is-eliminated' : '', standing.gameToday ? 'has-game-today' : '', standing.gameToday || standing.nextGame && !standing.eliminated ? 'has-match' : ''].filter(Boolean).join(' ')}>
             <button
               type="button"
               className="row"
@@ -26,8 +26,8 @@ export function Leaderboard({ standings, onSelect }: Props) {
               <span className="team">
                 <span className="flag" role="img" aria-label={`${standing.team} flag`}>{standing.flag}</span>
                 <span className="team-name">{standing.team}</span>
-                {standing.gameToday ? <small className="today-match">vs {standing.gameToday.opponent} · {gameSummary(standing.gameToday)}</small>
-                  : standing.nextGame && !standing.eliminated ? <small className="next-match">Next vs {standing.nextGame.opponent} · {gameSummary(standing.nextGame)}</small> : null}
+                {standing.gameToday ? <small className="today-match"><span>vs {standing.gameToday.opponent}</span><time>{gameSummary(standing.gameToday)}</time></small>
+                  : standing.nextGame && !standing.eliminated ? <small className="next-match"><span>vs {standing.nextGame.opponent}</span><time>{gameSummary(standing.nextGame)}</time></small> : null}
               </span>
               <strong className="points">{standing.points}</strong>
               <span className="wins">{standing.wins}</span>
