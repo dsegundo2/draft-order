@@ -31,6 +31,8 @@ jobs:
           cache-dependency-path: 2026-leaderboards/package-lock.json
       - run: npm ci
         working-directory: 2026-leaderboards
+      - run: npx playwright install --with-deps chromium
+        working-directory: 2026-leaderboards
       - run: npm run lint
         working-directory: 2026-leaderboards
       - run: npm test
