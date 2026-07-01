@@ -10,7 +10,7 @@ export function Leaderboard({ standings, onSelect }: Props) {
   return (
     <section className="leaderboard" aria-label="Manager standings">
       <div className="table-head" aria-hidden="true">
-        <span className="rank">#</span><span className="manager">Manager</span><span className="team">Team</span><span className="points">Pts</span><span className="wins">W</span><span className="goals" title="Goals for">G</span>
+        <span className="rank">#</span><span className="player">Player</span><span className="opponent">Opponent</span><span className="when">When</span><span className="points">Pts</span><span className="wins">W</span><span className="goals" title="Goals for">G</span>
       </div>
       <ol className="table-body">
         {standings.map((standing, index) => (
@@ -22,13 +22,17 @@ export function Leaderboard({ standings, onSelect }: Props) {
               aria-label={`View ${standing.manager}, ${standing.team}, ${standing.points} points`}
             >
               <span className="rank">{index + 1}</span>
-              <span className="manager"><span className="manager-name">{standing.manager}</span><span className="mobile-team" aria-hidden="true"><span>{standing.flag}</span>{standing.team}</span></span>
-              <span className="team">
+              <span className="player">
+                <b>{standing.manager}</b>
+                <small>
                 <span className="flag" role="img" aria-label={`${standing.team} flag`}>{standing.flag}</span>
                 <span className="team-name">{standing.team}</span>
-                {standing.gameToday ? <small className="today-match"><span>vs {standing.gameToday.opponent}</span><time>{gameSummary(standing.gameToday)}</time></small>
-                  : standing.nextGame && !standing.eliminated ? <small className="next-match"><span>vs {standing.nextGame.opponent}</span><time>{gameSummary(standing.nextGame)}</time></small> : null}
+                </small>
               </span>
+              {standing.gameToday ? <span className="opponent today-match">vs {standing.gameToday.opponent}</span>
+                : standing.nextGame && !standing.eliminated ? <span className="opponent next-match">vs {standing.nextGame.opponent}</span> : <span className="opponent" />}
+              {standing.gameToday ? <time className="when today-match">{gameSummary(standing.gameToday)}</time>
+                : standing.nextGame && !standing.eliminated ? <time className="when next-match">{gameSummary(standing.nextGame)}</time> : <span className="when" />}
               <strong className="points">{standing.points}</strong>
               <span className="wins">{standing.wins}</span>
               <span className="goals">{standing.goalsFor}</span>
@@ -37,7 +41,7 @@ export function Leaderboard({ standings, onSelect }: Props) {
         ))}
       </ol>
       <div className="legend" aria-label="Status legend">
-        <span><i className="status-dot active" />Game today (opponent shown)</span>
+        <span><i className="status-dot active" />Game today</span>
         <span><i className="status-dot eliminated" />Eliminated</span>
       </div>
     </section>

@@ -56,7 +56,7 @@ test('refresh recalculates live goals and half-points from the latest score', as
   const updatedFrance = page.getByRole('button', { name: /View Jeff, France, 1 points/ })
   await expect(updatedFrance).toBeVisible()
   await expect(updatedFrance.locator('.goals')).toHaveText('2')
-  await expect(updatedFrance.locator('.today-match')).toContainText('Live 2–0')
+  await expect(updatedFrance.locator('.when.today-match')).toHaveText('Live 2–0')
 })
 
 test('shows an honest error with no fake standings when ESPN fails, then retries', async ({ page }) => {
@@ -76,9 +76,9 @@ test('mobile standings have separated columns and detail returns cleanly', async
   await page.goto('/')
   const layout = await page.locator('.row').first().evaluate((row) => {
     const box = (selector) => row.querySelector(selector).getBoundingClientRect()
-    return { manager: box('.manager'), team: box('.team'), points: box('.points'), wins: box('.wins'), goals: box('.goals') }
+    return { player: box('.player'), points: box('.points'), wins: box('.wins'), goals: box('.goals') }
   })
-  expect(layout.team.top).toBeGreaterThan(layout.manager.top)
+  expect(layout.player.right).toBeLessThan(layout.points.left)
   expect(layout.wins.left - layout.points.right).toBeGreaterThanOrEqual(7)
   expect(layout.goals.left - layout.wins.right).toBeGreaterThanOrEqual(7)
   const density = await page.evaluate(() => {
@@ -140,20 +140,22 @@ test('long future game metadata stays contained on narrow mobile', async ({ page
     ] }],
   }] })
   await page.goto('/')
-  const metadata = page.locator('.next-match').first()
-  await expect(metadata).toBeVisible()
-  await expect(metadata).toContainText('Bosnia and Herzegovina')
-  await expect(metadata.locator('time')).toHaveText('Fri, Jul 10 · 4:30 PM PT')
-  const containment = await metadata.evaluate((element) => {
-    const metadataBox = element.getBoundingClientRect()
-    const teamBox = element.closest('.team').getBoundingClientRect()
+  const opponent = page.locator('.opponent.next-match').first()
+  const when = page.locator('.when.next-match').first()
+  await expect(opponent).toHaveText('vs Bosnia and Herzegovina')
+  await expect(when).toHaveText('Fri, Jul 10 · 4:30 PM PT')
+  const containment = await opponent.evaluate((element) => {
+    const row = element.closest('.row')
+    const playerBox = row.querySelector('.player').getBoundingClientRect()
+    const opponentBox = element.getBoundingClientRect()
+    const whenBox = row.querySelector('.when').getBoundingClientRect()
     return {
-      contained: metadataBox.left >= teamBox.left && metadataBox.right <= teamBox.right,
-      opponentEllipsis: getComputedStyle(element.querySelector('span')).textOverflow,
-      timeVisible: element.querySelector('time').getBoundingClientRect().right <= teamBox.right,
+      opponentContained: opponentBox.left >= playerBox.left && opponentBox.right <= playerBox.right,
+      whenContained: whenBox.left >= playerBox.left && whenBox.right <= playerBox.right,
+      contentFits: row.scrollHeight <= row.clientHeight,
     }
   })
-  expect(containment).toEqual({ contained: true, opponentEllipsis: 'ellipsis', timeVisible: true })
+  expect(containment).toEqual({ opponentContained: true, whenContained: true, contentFits: true })
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
 })
 

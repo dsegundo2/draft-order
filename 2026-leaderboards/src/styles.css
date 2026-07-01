@@ -33,12 +33,12 @@ svg { width: 1.25rem; height: 1.25rem; fill: none; stroke: currentColor; stroke-
 @keyframes spin { to { transform: rotate(1turn); } }
 
 .leaderboard { border: 1px solid var(--rule); border-radius: 12px; overflow: hidden; background: #fff; }
-.table-head, .row { display: grid; grid-template-columns: 40px minmax(100px, .8fr) minmax(180px, 1.35fr) 52px 44px 52px; column-gap: clamp(10px, 1.4vw, 20px); align-items: center; }
+.table-head, .row { display: grid; grid-template-columns: 26px minmax(90px, .8fr) minmax(85px, .75fr) minmax(105px, 1fr) 46px 34px 38px; column-gap: clamp(8px, 1.15vw, 16px); align-items: center; }
 .table-head { height: 50px; padding: 0 clamp(14px, 2vw, 24px); border-bottom: 1px solid var(--rule); color: var(--ink); font-size: 11px; font-weight: 650; text-transform: uppercase; }
 .table-body { list-style: none; padding: 0; margin: 0; }
 .table-body li { margin: 0; border-bottom: 1px solid var(--rule); }
 .table-body li:last-child { border-bottom: 0; }
-.row { width: 100%; min-height: 54px; padding: 0 clamp(14px, 2vw, 24px); border: 0; border-left: 3px solid transparent; background: #fff; color: var(--ink); text-align: left; cursor: pointer; transition: background .16s ease, border-color .16s ease, opacity .16s ease; -webkit-tap-highlight-color: transparent; }
+.row { width: 100%; min-height: 66px; padding: 8px clamp(14px, 2vw, 24px); border: 0; border-left: 3px solid transparent; background: #fff; color: var(--ink); text-align: left; cursor: pointer; transition: background .16s ease, border-color .16s ease, opacity .16s ease; -webkit-tap-highlight-color: transparent; }
 .row:hover { background: #f8faf9; }
 .row:active { border-left-color: #4f75a1; background: #e9f0f7; }
 .has-game-today .row { border-left-color: var(--green); background: #f1faf4; }
@@ -47,21 +47,19 @@ svg { width: 1.25rem; height: 1.25rem; fill: none; stroke: currentColor; stroke-
 .is-eliminated .row { color: #8b93a2; background: #fafafa; }
 .is-eliminated .row:hover { background: #f5f5f5; }
 .is-eliminated .row:active { border-left-color: #4f75a1; background: #e4ebf2; }
-.rank, .manager, .team, .wins, .goals { min-width: 0; font-size: 14px; }
-.manager { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.mobile-team { display: none; }
-.team { min-width: 0; display: flex; align-items: center; gap: 12px; }
+.rank, .player, .opponent, .when, .wins, .goals { min-width: 0; font-size: 14px; }
+.player { display: grid; gap: 5px; }
+.player b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.player small { min-width: 0; display: flex; align-items: center; gap: 7px; color: var(--muted); font-size: 12px; }
 .team-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.today-match, .next-match { min-width: 0; display: flex; align-items: center; gap: 5px; overflow: hidden; font-size: 10px; white-space: nowrap; }
+.opponent, .when { line-height: 1.35; }
+.today-match, .next-match { min-width: 0; overflow: visible; font-size: 12px; white-space: normal; }
 .today-match { color: #087133; font-weight: 650; }
 .next-match { color: var(--muted); }
-.today-match span, .next-match span { overflow: hidden; text-overflow: ellipsis; }
-.today-match time, .next-match time { flex: 0 0 auto; font: inherit; }
-.today-match time::before, .next-match time::before { content: '· '; }
-.flag { width: 29px; height: 22px; display: inline-grid; flex: 0 0 auto; place-items: center; overflow: hidden; font-size: 24px; line-height: 1; }
+.flag { width: 22px; height: 18px; display: inline-grid; flex: 0 0 auto; place-items: center; overflow: hidden; font-size: 19px; line-height: 1; }
 .points { text-align: right; color: var(--ink); font-size: 15px; font-weight: 750; }
 .row .points, .table-head .points { position: relative; isolation: isolate; }
-.row .points::before, .table-head .points::before { content: ''; position: absolute; z-index: -1; top: 50%; left: -4px; width: calc(100% + 8px); height: 54px; transform: translateY(-50%); background: rgba(31, 79, 113, .035); }
+.row .points::before, .table-head .points::before { content: ''; position: absolute; z-index: -1; top: 50%; left: -4px; width: calc(100% + 8px); height: calc(100% + 16px); transform: translateY(-50%); background: rgba(31, 79, 113, .035); }
 .table-head .points::before { height: 50px; }
 .table-head .points { font-size: 12px; font-weight: 800; }
 .is-eliminated .points { color: #788292; }
@@ -140,33 +138,27 @@ svg { width: 1.25rem; height: 1.25rem; fill: none; stroke: currentColor; stroke-
   .table-head { font-size: 10px; line-height: 1; }
   .table-head > span { display: flex; height: 100%; align-items: center; }
   .table-head .points, .table-head .wins, .table-head .goals { justify-content: flex-end; }
-  .table-head .manager { grid-column: 2; }
-  .table-head .manager::after { content: ' / Team'; }
-  .table-head .team { display: none; }
-  .row { min-height: 56px; grid-template-rows: auto auto; align-content: center; }
-  .has-match .row { min-height: 78px; }
-  .row .points::before { height: 56px; }
-  .has-match .row .points::before { height: 78px; }
-  .row .rank { grid-column: 1; grid-row: 1 / 3; align-self: center; }
-  .row .manager { grid-column: 2; grid-row: 1; align-self: end; }
-  .row .team { grid-column: 2; grid-row: 2; align-self: start; }
-  .row .points, .row .wins, .row .goals, .table-head .points, .table-head .wins, .table-head .goals { grid-row: 1 / 3; align-self: center; }
+  .table-head .player { grid-column: 2; }
+  .table-head .player::after { content: ' / Team'; }
+  .table-head .opponent, .table-head .when { display: none; }
+  .row { min-height: 58px; grid-template-rows: auto; align-content: center; padding-block: 9px; }
+  .has-match .row { min-height: 92px; grid-template-rows: auto auto auto; }
+  .row .rank { grid-column: 1; grid-row: 1 / 4; align-self: center; }
+  .row .player { grid-column: 2; grid-row: 1; align-self: center; }
+  .row .opponent { grid-column: 2; grid-row: 2; align-self: end; }
+  .row .when { grid-column: 2; grid-row: 3; align-self: start; }
+  .row .points, .row .wins, .row .goals, .table-head .points, .table-head .wins, .table-head .goals { grid-row: 1 / 4; align-self: center; }
   .row .points, .table-head .points { grid-column: 3; }
   .row .wins, .table-head .wins { grid-column: 4; }
   .row .goals, .table-head .goals { grid-column: 5; }
-  .rank, .team, .wins, .goals { font-size: 12px; }
+  .rank, .player, .opponent, .when, .wins, .goals { font-size: 12px; }
   .points { font-size: 14px; }
-  .row .manager { display: flex; align-items: center; gap: 8px; overflow: visible; font-size: 13px; font-weight: 650; }
-  .row .manager-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-  .row .mobile-team { min-width: 0; display: inline-flex; align-items: center; gap: 4px; overflow: hidden; color: var(--muted); font-size: 11px; font-weight: 450; text-overflow: ellipsis; }
-  .row .mobile-team span { flex: 0 0 auto; font-size: 15px; line-height: 1; }
-  .row .team-name { color: var(--muted); font-size: 11px; }
-  .row .team { min-width: 0; display: block; overflow: hidden; }
-  .row .team > .flag, .row .team > .team-name { display: none; }
-  .row .today-match, .row .next-match { width: 100%; min-width: 0; display: grid; justify-items: start; gap: 2px; font-size: 9px; }
-  .row .today-match time::before, .row .next-match time::before { content: ''; }
-  .team { gap: 7px; }
-  .flag { width: 19px; height: 16px; font-size: 16px; }
+  .row .player { display: flex; align-items: center; gap: 7px; overflow: hidden; }
+  .row .player b { flex: 0 1 auto; font-size: 13px; }
+  .row .player small { flex: 0 1 auto; gap: 4px; overflow: hidden; font-size: 11px; }
+  .row .opponent, .row .when { padding-left: 0; font-size: 10px; line-height: 1.25; }
+  .row .when { margin-top: 2px; }
+  .flag { width: 17px; height: 15px; font-size: 15px; }
   .legend { min-height: 48px; justify-content: center; gap: 18px; padding: 8px; }
   .legend span { min-width: 0; line-height: 1.25; }
   .team-detail { display: none; }
@@ -194,10 +186,8 @@ svg { width: 1.25rem; height: 1.25rem; fill: none; stroke: currentColor; stroke-
   .app-header h1 { font-size: 27px; }
   .updated { left: 18px; bottom: 15px; }
   .table-head, .row { grid-template-columns: 22px minmax(0, 1fr) 34px 26px 30px; column-gap: 7px; padding-inline: 8px; }
-  .rank, .team, .wins, .goals, .points { font-size: 11px; }
-  .row .manager { font-size: 12px; }
-  .team { gap: 5px; }
-  .row .today-match, .row .next-match { gap: 5px; }
+  .rank, .player, .opponent, .when, .wins, .goals, .points { font-size: 11px; }
+  .row .player b { font-size: 12px; }
   .legend { gap: 12px; font-size: 11px; }
   .status-dot { flex: 0 0 auto; }
   .detail-open .team-detail { padding-inline: 12px; }
