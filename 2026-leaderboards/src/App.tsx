@@ -10,7 +10,9 @@ import './styles.css'
 
 const updateFormatter = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZoneName: 'short' })
 const group = resolveGroup()
-const headerStyle = { backgroundImage: `url(/${group.headerImage})` }
+// Group routes are emitted as self-contained directories on GitHub Pages, so
+// header assets must stay relative to the current route (not the domain root).
+const headerStyle = { backgroundImage: `url(./${group.headerImage})` }
 
 export default function App() {
   const socialPreview = new URLSearchParams(window.location.search).has('social-preview')
