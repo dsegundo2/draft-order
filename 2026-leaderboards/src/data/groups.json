@@ -1,0 +1,41 @@
+{
+  "defaultGroup": "hb",
+  "groups": {
+    "hb": {
+      "name": "HB",
+      "title": "Fantasy Order 2026",
+      "headerImage": "fantasy-order-header.png",
+      "players": [
+        { "manager": "Ryan H.", "team": "Brazil", "espnName": "Brazil", "flag": "🇧🇷", "population": 211998573 },
+        { "manager": "Ryan L.", "team": "Germany", "espnName": "Germany", "flag": "🇩🇪", "population": 83516593 },
+        { "manager": "Diego", "team": "Argentina", "espnName": "Argentina", "flag": "🇦🇷", "population": 45696159 },
+        { "manager": "Troy", "team": "England", "espnName": "England", "flag": "🏴󠁧󠁢󠁥󠁮󠁧󠁿", "population": 58620100 },
+        { "manager": "Grant", "team": "Netherlands", "espnName": "Netherlands", "flag": "🇳🇱", "population": 18044027 },
+        { "manager": "Jeff", "team": "France", "espnName": "France", "flag": "🇫🇷", "population": 68551653 },
+        { "manager": "Cam", "team": "Portugal", "espnName": "Portugal", "flag": "🇵🇹", "population": 10694681 },
+        { "manager": "Nolan", "team": "Spain", "espnName": "Spain", "flag": "🇪🇸", "population": 48848840 },
+        { "manager": "Noah", "team": "Mexico", "espnName": "Mexico", "flag": "🇲🇽", "population": 130861007 },
+        { "manager": "Buck", "team": "Belgium", "espnName": "Belgium", "flag": "🇧🇪", "population": 11858610 },
+        { "manager": "Will", "team": "Croatia", "espnName": "Croatia", "flag": "🇭🇷", "population": 3866200 },
+        { "manager": "Ted", "team": "Japan", "espnName": "Japan", "flag": "🇯🇵", "population": 123975371 }
+      ]
+    },
+    "winks": {
+      "name": "Winks",
+      "title": "Winks Fantasy Order 2026",
+      "headerImage": "winks-header.png",
+      "players": [
+        { "manager": "Lisa", "team": "France", "espnName": "France", "flag": "🇫🇷", "population": 68551653 },
+        { "manager": "Sharla", "team": "Argentina", "espnName": "Argentina", "flag": "🇦🇷", "population": 45696159 },
+        { "manager": "Nolan", "team": "Spain", "espnName": "Spain", "flag": "🇪🇸", "population": 48848840 },
+        { "manager": "Hayden", "team": "Belgium", "espnName": "Belgium", "flag": "🇧🇪", "population": 11858610 },
+        { "manager": "Tim", "team": "Brazil", "espnName": "Brazil", "flag": "🇧🇷", "population": 211998573 },
+        { "manager": "Cheri", "team": "England", "espnName": "England", "flag": "🏴󠁧󠁢󠁥󠁮󠁧󠁿", "population": 58620100 },
+        { "manager": "Kahlah", "team": "Switzerland", "espnName": "Switzerland", "flag": "🇨🇭", "population": 9002763 },
+        { "manager": "Kim", "team": "Mexico", "espnName": "Mexico", "flag": "🇲🇽", "population": 130861007 },
+        { "manager": "Scott", "team": "Germany", "espnName": "Germany", "flag": "🇩🇪", "population": 83516593 },
+        { "manager": "Pap", "team": "Netherlands", "espnName": "Netherlands", "flag": "🇳🇱", "population": 18044027 }
+      ]
+    }
+  }
+}

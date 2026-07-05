@@ -41,6 +41,27 @@ test('renders standings calculated from ESPN and opens accurate eliminated team 
   await expect(page.getByRole('heading', { name: 'Knockout wins' })).toHaveCount(0)
 })
 
+test('loads the Winks group from its URL with its roster and header', async ({ page }) => {
+  await mockEspn(page)
+  await page.goto('/winks')
+  await expect(page.getByRole('heading', { name: 'Winks Fantasy Order 2026' })).toBeVisible()
+  await expect(page.locator('.table-body li')).toHaveCount(10)
+  for (const manager of ['Lisa', 'Sharla', 'Nolan', 'Hayden', 'Tim', 'Cheri', 'Kahlah', 'Kim', 'Scott', 'Pap']) {
+    await expect(page.getByRole('button', { name: new RegExp(`View ${manager},`) })).toBeVisible()
+  }
+  await expect(page.locator('.app-header')).toHaveCSS('background-image', /winks-header\.png/)
+})
+
+test('keeps the default group at both the current URL and /hb', async ({ page }) => {
+  await mockEspn(page)
+  for (const route of ['/', '/hb']) {
+    await page.goto(route)
+    await expect(page.getByRole('heading', { name: 'Fantasy Order 2026' })).toBeVisible()
+    await expect(page.locator('.table-body li')).toHaveCount(12)
+    await expect(page.getByRole('button', { name: /View Ryan H\./ })).toBeVisible()
+  }
+})
+
 test('refresh recalculates live goals and half-points from the latest score', async ({ page }) => {
   let score = 1
   await page.route('**/scoreboard?**', (route) => {
@@ -177,4 +198,16 @@ test('social preview renders all current rows and eliminated styling', async ({ 
   })
   expect(previewChrome).toEqual({ borderWidth: '0px', boxShadow: 'none' })
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth && document.documentElement.scrollHeight <= window.innerHeight)).toBe(true)
+})
+
+test('Winks social preview is group-specific', async ({ page }) => {
+  await page.setViewportSize({ width: 1200, height: 630 })
+  await mockEspn(page)
+  await page.goto('/winks?social-preview=1')
+  await expect(page.locator('.preview-header')).toContainText('Winks Fantasy Order 2026')
+  await expect(page.locator('.preview-header')).toHaveCSS('background-image', /winks-header\.png/)
+  await expect(page.locator('.preview-row')).toHaveCount(10)
+  for (const manager of ['Lisa', 'Sharla', 'Nolan', 'Hayden', 'Tim', 'Cheri', 'Kahlah', 'Kim', 'Scott', 'Pap']) {
+    await expect(page.locator('.preview-standings')).toContainText(manager)
+  }
 })

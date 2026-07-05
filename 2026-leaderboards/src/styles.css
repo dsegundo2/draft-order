@@ -19,7 +19,7 @@ button { font: inherit; }
 svg { width: 1.25rem; height: 1.25rem; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .app { width: min(1440px, 100%); min-height: 100vh; margin: 0 auto; padding: 42px; display: grid; grid-template-columns: minmax(640px, 1.65fr) minmax(360px, .85fr); gap: 16px; }
 .standings-view { min-width: 0; }
-.app-header { position: relative; min-height: 220px; display: flex; justify-content: space-between; align-items: flex-start; overflow: hidden; margin-bottom: 18px; padding: 28px; border-radius: 24px; color: #fff; background: #07172a url('/fantasy-order-header.png') center / cover no-repeat; box-shadow: 0 16px 38px rgba(10, 32, 47, .16); }
+.app-header { position: relative; min-height: 220px; display: flex; justify-content: space-between; align-items: flex-start; overflow: hidden; margin-bottom: 18px; padding: 28px; border-radius: 24px; color: #fff; background-color: #07172a; background-position: center; background-size: cover; background-repeat: no-repeat; box-shadow: 0 16px 38px rgba(10, 32, 47, .16); }
 .app-header > * { position: relative; z-index: 1; }
 .app-header > div { align-self: stretch; }
 .app-header h1 { max-width: 440px; margin: 0; color: #fff; font-size: clamp(24px, 2.6vw, 36px); line-height: 1.05; letter-spacing: -.035em; text-transform: uppercase; text-shadow: 0 2px 18px rgba(0,0,0,.35); }
@@ -199,7 +199,7 @@ svg { width: 1.25rem; height: 1.25rem; fill: none; stroke: currentColor; stroke-
 
 .social-preview { width: 1200px; height: 630px; overflow: hidden; padding: 20px; color: var(--ink); background: #f3f5f6; }
 .preview-loading { display: grid; place-items: center; font-size: 24px; }
-.preview-header { height: 128px; display: flex; justify-content: space-between; align-items: flex-end; padding: 24px 28px; border-radius: 14px; color: #fff; background: #07172a url('/fantasy-order-header.png') center 42% / 106% auto no-repeat; box-shadow: 0 4px 14px rgba(10,32,47,.1); }
+.preview-header { height: 128px; display: flex; justify-content: space-between; align-items: flex-end; padding: 24px 28px; border-radius: 14px; color: #fff; background-color: #07172a; background-position: center 42%; background-size: 106% auto; background-repeat: no-repeat; box-shadow: 0 4px 14px rgba(10,32,47,.1); }
 .preview-header h1 { max-width: 760px; margin: 0; font-size: 46px; line-height: 1; letter-spacing: -.04em; text-transform: uppercase; text-shadow: 0 2px 18px rgba(0,0,0,.45); }
 .preview-header h1 span { white-space: nowrap; }
 .preview-header p { margin: 0; color: rgba(255,255,255,.76); font-size: 14px; font-weight: 500; text-shadow: 0 1px 10px rgba(0,0,0,.6); }

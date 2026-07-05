@@ -4,10 +4,13 @@ import { RefreshIcon } from './components/Icons'
 import { TeamDetail } from './components/TeamDetail'
 import { SocialPreview } from './components/SocialPreview'
 import { fetchStandings } from './data/espn'
+import { resolveGroup } from './data/groups'
 import type { ManagerStanding } from './types'
 import './styles.css'
 
 const updateFormatter = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZoneName: 'short' })
+const group = resolveGroup()
+const headerStyle = { backgroundImage: `url(/${group.headerImage})` }
 
 export default function App() {
   const socialPreview = new URLSearchParams(window.location.search).has('social-preview')
@@ -57,16 +60,16 @@ export default function App() {
   }
 
   if (socialPreview) {
-    if (standings && updatedAt) return <SocialPreview standings={standings} updatedAt={updatedAt} />
+    if (standings && updatedAt) return <SocialPreview standings={standings} updatedAt={updatedAt} title={group.title} headerStyle={headerStyle} />
     return <main className="social-preview preview-loading" aria-label="Fantasy Order leaderboard preview">Loading current standings…</main>
   }
 
   return (
     <main className={mobileDetailOpen ? 'app detail-open' : 'app'}>
       <section className="standings-view">
-        <header className="app-header">
+        <header className="app-header" style={headerStyle}>
           <div>
-            <h1>Fantasy Order 2026 <span aria-hidden="true">🏆</span></h1>
+            <h1>{group.title} <span aria-hidden="true">🏆</span></h1>
             {updatedAt ? <p className="updated">Updated {updateFormatter.format(updatedAt)}</p> : null}
           </div>
           <button className={loading ? 'refresh is-loading' : 'refresh'} onClick={refresh} type="button" disabled={loading}>

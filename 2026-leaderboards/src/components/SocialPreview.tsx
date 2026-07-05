@@ -1,8 +1,9 @@
+import type { CSSProperties } from 'react'
 import type { ManagerStanding } from '../types'
 
-type Props = { standings: ManagerStanding[]; updatedAt: Date }
+type Props = { standings: ManagerStanding[]; updatedAt: Date; title: string; headerStyle: CSSProperties }
 
-export function SocialPreview({ standings, updatedAt }: Props) {
+export function SocialPreview({ standings, updatedAt, title, headerStyle }: Props) {
   const updated = new Intl.DateTimeFormat('en-US', {
     month: 'short',
     day: 'numeric',
@@ -14,8 +15,8 @@ export function SocialPreview({ standings, updatedAt }: Props) {
 
   return (
     <main className="social-preview is-ready" aria-label="Fantasy Order leaderboard preview">
-      <header className="preview-header">
-        <h1>Fantasy Order 2026 <span aria-hidden="true">🏆</span></h1>
+      <header className="preview-header" style={headerStyle}>
+        <h1>{title} <span aria-hidden="true">🏆</span></h1>
         <p>Updated {updated} PT</p>
       </header>
       <section className="preview-standings" aria-label="Current standings">
