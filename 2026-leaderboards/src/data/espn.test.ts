@@ -1,7 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { buildStandings, fetchStandings, SCOREBOARD_URL } from './espn'
+import { buildStandings, fetchStandings, SCOREBOARD_URL, splitFinalFourStandings } from './espn'
+import type { EspnEvent } from './worldCupPlacements'
 
-const match = (home: string, homeScore: string, away: string, awayScore: string, options: { completed?: boolean; winner?: string; round?: string; date?: string } = {}) => ({
+const match = (home: string, homeScore: string, away: string, awayScore: string, options: { completed?: boolean; winner?: string; round?: string; date?: string } = {}): EspnEvent => ({
   date: options.date,
   season: { slug: options.round ?? 'group-stage' },
   status: { type: { completed: options.completed ?? true, state: (options.completed ?? true) ? 'post' : 'pre' } },
@@ -92,14 +93,110 @@ describe('buildStandings', () => {
 
   it('only exposes complete scores for live or final games', () => {
     const live = match('Brazil', '2', 'France', '1', { completed: false, date: '2026-06-30T19:00:00Z', round: 'round-of-32' })
-    live.status.type.state = 'in'
+    live.status!.type!.state = 'in'
     const missing = match('Germany', '', 'Spain', '1', { completed: false, date: '2026-06-30T21:00:00Z', round: 'round-of-32' })
-    missing.status.type.state = 'in'
+    missing.status!.type!.state = 'in'
     const result = buildStandings([live, missing], new Date('2026-06-30T18:00:00Z'))
     expect(result.find((entry) => entry.team === 'Brazil')?.gameToday).toMatchObject({ state: 'live', score: { team: 2, opponent: 1 } })
     expect(result.find((entry) => entry.team === 'Brazil')).toMatchObject({ points: 1, goalsFor: 2, goalsAgainst: 1, wins: 0 })
     expect(result.find((entry) => entry.team === 'Germany')?.gameToday?.score).toBeUndefined()
     expect(result.find((entry) => entry.team === 'Germany')).toMatchObject({ points: 0, goalsFor: 0, goalsAgainst: 0 })
+  })
+
+
+
+  it('keeps points-and-wins order before all semifinalists are known', () => {
+    const result = buildStandings([
+      match('Mexico', '8', 'Poland', '0', { winner: 'Mexico', round: 'round-of-32' }),
+      match('Brazil', '1', 'Germany', '0', { completed: false, round: 'semifinals' }),
+    ])
+    const sections = splitFinalFourStandings(result)
+    expect(sections.finalFour).toHaveLength(0)
+    expect(sections.remainingLeaderboard.slice(0, 2).map((entry) => entry.team)).toEqual(['Mexico', 'Brazil'])
+  })
+
+  it('derives complete final-four placements from final and third-place outcomes and removes duplicates from remaining standings', () => {
+    const result = buildStandings([
+      match('Mexico', '10', 'Poland', '0', { winner: 'Mexico', round: 'round-of-32' }),
+      match('Brazil', '1', 'Germany', '0', { winner: 'Brazil', round: 'semifinals' }),
+      match('Argentina', '1', 'France', '0', { winner: 'Argentina', round: 'semifinals' }),
+      match('Brazil', '1', 'Argentina', '0', { winner: 'Brazil', round: 'final' }),
+      match('Germany', '3', 'France', '2', { winner: 'Germany', round: '3rd-place-match' }),
+    ])
+    const sections = splitFinalFourStandings(result)
+    expect(sections.finalFour.map((entry) => [entry.team, entry.finalFourPlacement?.position, entry.finalFourPlacement?.label])).toEqual([
+      ['Brazil', 1, 'World Cup champion'],
+      ['Argentina', 2, 'World Cup runner-up'],
+      ['Germany', 3, 'Third-place winner'],
+      ['France', 4, 'Fourth place'],
+    ])
+    expect(sections.finalFour[0].points).toBeLessThan(result.find((entry) => entry.team === 'Mexico')!.points)
+    expect(sections.remainingLeaderboard.map((entry) => entry.team)).not.toEqual(expect.arrayContaining(['Brazil', 'Argentina', 'Germany', 'France']))
+    expect(sections.remainingLeaderboard[0].team).toBe('Mexico')
+  })
+
+  it('handles the final completing before the third-place match', () => {
+    const thirdPlace = match('Germany', '0', 'France', '0', { completed: false, round: '3rd-place-match' })
+    thirdPlace.status!.type!.state = 'pre'
+    const sections = splitFinalFourStandings(buildStandings([
+      match('Brazil', '1', 'Germany', '0', { winner: 'Brazil', round: 'semifinals' }),
+      match('Argentina', '1', 'France', '0', { winner: 'Argentina', round: 'semifinals' }),
+      match('Brazil', '2', 'Argentina', '1', { winner: 'Brazil', round: 'final' }),
+      thirdPlace,
+    ]))
+    expect(sections.finalFour.map((entry) => [entry.team, entry.finalFourPlacement?.position, entry.finalFourPlacement?.label])).toEqual([
+      ['Brazil', 1, 'World Cup champion'],
+      ['Argentina', 2, 'World Cup runner-up'],
+      ['Germany', undefined, 'Tied for 3rd'],
+      ['France', undefined, 'Tied for 3rd'],
+    ])
+  })
+
+  it('handles the third-place match completing before the final', () => {
+    const final = match('Brazil', '0', 'Argentina', '0', { completed: false, round: 'final' })
+    final.status!.type!.state = 'pre'
+    const sections = splitFinalFourStandings(buildStandings([
+      match('Brazil', '1', 'Germany', '0', { winner: 'Brazil', round: 'semifinals' }),
+      match('Argentina', '1', 'France', '0', { winner: 'Argentina', round: 'semifinals' }),
+      final,
+      match('Germany', '1', 'France', '0', { winner: 'Germany', round: '3rd-place-match' }),
+    ]))
+    expect(sections.finalFour.map((entry) => [entry.team, entry.finalFourPlacement?.position, entry.finalFourPlacement?.label])).toEqual([
+      ['Brazil', undefined, 'Tied for 1st'],
+      ['Argentina', undefined, 'Tied for 1st'],
+      ['Germany', 3, 'Third-place winner'],
+      ['France', 4, 'Fourth place'],
+    ])
+  })
+
+  it('does not assign placements from live, postponed, canceled, or incomplete placement matches', () => {
+    const liveFinal = match('Brazil', '2', 'Argentina', '1', { completed: false, winner: 'Brazil', round: 'final' })
+    liveFinal.status!.type!.state = 'in'
+    const canceledThird = match('Germany', '1', 'France', '0', { completed: false, winner: 'Germany', round: '3rd-place-match' })
+    canceledThird.status!.type!.name = 'STATUS_CANCELED'
+    canceledThird.status!.type!.description = 'Canceled'
+    const sections = splitFinalFourStandings(buildStandings([
+      match('Brazil', '1', 'Germany', '0', { winner: 'Brazil', round: 'semifinals' }),
+      match('Argentina', '1', 'France', '0', { winner: 'Argentina', round: 'semifinals' }),
+      liveFinal,
+      canceledThird,
+    ]))
+    expect(sections.finalFour.map((entry) => entry.finalFourPlacement?.position)).toEqual([undefined, undefined, undefined, undefined])
+  })
+
+  it('normalizes provider naming variations and is deterministic after corrected results are reprocessed', () => {
+    const semiA = match('Brazil', '1', 'Germany', '0', { winner: 'Brazil', round: 'group-stage' })
+    semiA.season!.slug = 'Semi Final'
+    const semiB = match('Argentina', '1', 'France', '0', { winner: 'Argentina', round: 'group-stage' })
+    semiB.name = 'Semi-final'
+    const final = match('Argentina', '2', 'Brazil', '1', { winner: 'Argentina', round: 'group-stage' })
+    final.name = 'Final'
+    const third = match('Germany', '1', 'France', '0', { winner: 'Germany', round: 'group-stage' })
+    third.competitions![0].notes = [{ headline: 'Bronze Medal Match' }]
+    const first = splitFinalFourStandings(buildStandings([semiA, semiB, final, third])).finalFour.map((entry) => `${entry.finalFourPlacement?.position}:${entry.team}`)
+    const second = splitFinalFourStandings(buildStandings([semiB, third, semiA, final])).finalFour.map((entry) => `${entry.finalFourPlacement?.position}:${entry.team}`)
+    expect(first).toEqual(['1:Argentina', '2:Brazil', '3:Germany', '4:France'])
+    expect(second).toEqual(first)
   })
 
   it('does not score or eliminate from a malformed completed event', () => {

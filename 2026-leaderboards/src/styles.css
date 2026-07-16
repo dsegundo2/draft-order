@@ -121,14 +121,14 @@ svg { width: 1.25rem; height: 1.25rem; fill: none; stroke: currentColor; stroke-
 .elimination > div { margin-top: 16px; display: flex; justify-content: space-between; align-items: center; color: inherit; font-size: 13px; }
 .elimination small { display: block; margin-top: 4px; color: inherit; }
 
-@media (max-width: 1000px) {
+@media (max-width: 1120px) {
   .app { padding: 28px; grid-template-columns: minmax(560px, 1.5fr) minmax(320px, .9fr); }
 }
 
 @media (max-width: 960px) {
   .app { width: 100%; padding: 0; display: block; }
-  .standings-view { min-height: 100vh; padding: 20px clamp(18px, 4vw, 42px) 24px; }
-  .app-header { min-height: 170px; margin-bottom: 14px; padding: 20px; border-radius: 17px; background-position: 57% center; }
+  .standings-view { --page-gutter: clamp(18px, 4vw, 42px); min-height: 100vh; padding: 0 var(--page-gutter) 24px; }
+  .app-header { min-height: 170px; margin: 0 calc(-1 * var(--page-gutter)) 14px; padding: 20px var(--page-gutter); border-radius: 0 0 17px 17px; background-position: 57% center; }
   .app-header h1 { max-width: 250px; font-size: 28px; line-height: 1.02; }
   .updated { left: 20px; bottom: 17px; max-width: 240px; font-size: 10px; }
   .refresh { margin-top: 0; padding: 9px; }
@@ -181,14 +181,15 @@ svg { width: 1.25rem; height: 1.25rem; fill: none; stroke: currentColor; stroke-
 }
 
 @media (max-width: 400px) {
-  .standings-view { padding: 14px 12px 20px; }
-  .app-header { min-height: 160px; margin-bottom: 12px; padding: 18px; }
+  .standings-view { --page-gutter: 12px; padding: 0 var(--page-gutter) 20px; }
+  .app-header { min-height: 160px; margin-bottom: 12px; padding: 18px var(--page-gutter); }
   .app-header h1 { font-size: 27px; }
-  .updated { left: 18px; bottom: 15px; }
+  .updated { left: var(--page-gutter); bottom: 15px; }
   .table-head, .row { grid-template-columns: 22px minmax(0, 1fr) 34px 26px 30px; column-gap: 7px; padding-inline: 8px; }
   .rank, .player, .opponent, .when, .wins, .goals, .points { font-size: 11px; }
   .row .player b { font-size: 12px; }
-  .legend { gap: 12px; font-size: 11px; }
+  .legend { justify-content: flex-start; flex-wrap: wrap; gap: 8px 14px; font-size: 10.5px; }
+  .legend span { flex: 0 1 auto; }
   .status-dot { flex: 0 0 auto; }
   .detail-open .team-detail { padding-inline: 12px; }
 }
@@ -218,3 +219,45 @@ svg { width: 1.25rem; height: 1.25rem; fill: none; stroke: currentColor; stroke-
 .preview-row.is-eliminated { color: #9aa2af; background: #f8f9fa; }
 .preview-row.is-eliminated .preview-manager { color: #a5acb7; }
 .preview-row.is-eliminated .preview-points { color: #8f98a7; }
+
+.final-four-section { border-bottom: 1px solid var(--rule); background: linear-gradient(180deg, #fffaf0, #fff); }
+.section-title { display: flex; justify-content: space-between; gap: 16px; padding: 22px clamp(18px, 2.4vw, 28px); border-bottom: 1px solid rgba(206, 155, 46, .28); }
+.section-title h2 { margin: 0; font-size: 22px; letter-spacing: -.03em; }
+.section-title p { margin: 5px 0 0; color: var(--muted); font-size: 13px; line-height: 1.4; }
+.final-four-list { list-style: none; display: grid; gap: 10px; margin: 0; padding: 14px clamp(14px, 2vw, 22px) 16px; }
+.final-four-item { margin: 0; }
+.final-four-card { width: 100%; min-height: 88px; display: grid; grid-template-columns: 58px minmax(170px, .7fr) minmax(190px, 1fr); grid-template-rows: auto auto; gap: 8px 18px; align-items: center; padding: 14px 18px; border: 1px solid rgba(206, 155, 46, .26); border-left: 5px solid #d5a11e; border-radius: 14px; background: rgba(255, 252, 246, .9); color: var(--ink); text-align: left; cursor: pointer; transition: background .16s ease, border-color .16s ease, transform .16s ease; }
+.final-four-card:hover { background: #fff7e4; transform: translateY(-1px); }
+.final-four-card:focus-visible { outline: 3px solid rgba(17,148,71,.25); outline-offset: 2px; }
+.placement-marker { width: 46px; height: 46px; display: inline-grid; place-items: center; border-radius: 999px; color: #7a5707; background: #fff2c3; font-size: 21px; font-weight: 850; line-height: 1; box-shadow: inset 0 0 0 1px rgba(213, 161, 30, .24); }
+.placement-pending .placement-marker { color: #6b7280; background: #eef1f4; font-size: 12px; letter-spacing: .04em; }
+.placement-fourth .placement-marker { color: #fff; background: #576172; font-size: 18px; }
+.placement-gold .final-four-card { border-left-color: #d5a11e; }
+.placement-silver .final-four-card { border-left-color: #aeb5c1; }
+.placement-bronze .final-four-card { border-left-color: #b47b46; }
+.placement-fourth .final-four-card { border-left-color: #576172; }
+.final-four-identity { grid-column: 2; grid-row: 1; min-width: 0; display: grid; gap: 6px; }
+.final-four-manager { overflow: hidden; color: var(--ink); font-size: 16px; font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
+.final-four-team { min-width: 0; display: flex; align-items: center; gap: 8px; overflow: hidden; color: var(--muted); font-size: 13px; white-space: nowrap; text-overflow: ellipsis; }
+.placement-pill { grid-column: 2; grid-row: 2; justify-self: start; max-width: 100%; padding: 7px 10px; border-radius: 999px; color: #835b04; background: #fff0bc; font-size: 12px; font-weight: 800; line-height: 1.2; white-space: normal; }
+.placement-pending .placement-pill { color: #475569; background: #eef1f4; }
+.final-four-match { grid-column: 3; grid-row: 1 / 3; min-width: 0; display: grid; gap: 4px; color: var(--muted); font-size: 13px; line-height: 1.35; }
+.final-four-match span, .final-four-match time { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.final-four-match span { color: var(--ink); font-weight: 750; }
+.section-divider { display: flex; align-items: center; gap: 12px; padding: 13px clamp(14px, 2vw, 24px); color: var(--muted); font-size: 11px; font-weight: 750; text-transform: uppercase; letter-spacing: .06em; background: #fbfcfd; }
+.section-divider::before, .section-divider::after { content: ''; height: 1px; flex: 1; background: var(--rule); }
+.status-dot.final-four { background: #d5a11e; }
+
+@media (max-width: 960px) {
+  .section-title { padding: 16px 14px; }
+  .section-title h2 { font-size: 18px; }
+  .section-title p { font-size: 12px; }
+  .final-four-list { gap: 9px; padding: 12px; }
+  .final-four-card { min-height: 104px; grid-template-columns: 46px minmax(0, 1fr); grid-template-rows: auto auto auto; gap: 6px 12px; padding: 13px 12px; }
+  .placement-marker { grid-row: 1 / 4; align-self: start; width: 38px; height: 38px; font-size: 18px; }
+  .placement-pending .placement-marker { font-size: 11px; }
+  .final-four-identity { grid-column: 2; grid-row: 1; }
+  .placement-pill { grid-column: 2; grid-row: 2; justify-self: start; font-size: 11px; }
+  .final-four-match { grid-column: 2; grid-row: 3; font-size: 11px; }
+  .section-divider { padding-inline: 12px; }
+}

@@ -7,6 +7,12 @@ export type ProgressStep = {
   complete: boolean
 }
 
+export type FinalFourPlacement = {
+  position?: 1 | 2 | 3 | 4
+  label: string
+  source: 'final' | 'third-place' | 'semifinal'
+}
+
 export type ManagerStanding = {
   manager: string
   team: string
@@ -23,6 +29,7 @@ export type ManagerStanding = {
   gameToday?: GameInfo
   nextGame?: GameInfo
   progress: ProgressStep[]
+  finalFourPlacement?: FinalFourPlacement
 }
 
 export type GameInfo = {

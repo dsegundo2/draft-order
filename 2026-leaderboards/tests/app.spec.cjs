@@ -180,6 +180,66 @@ test('long future game metadata stays contained on narrow mobile', async ({ page
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
 })
 
+
+
+const finalFourPayload = { events: [
+  event('Mexico', 10, 'Poland', 0, { winner: 'Mexico', round: 'round-of-32' }),
+  event('Brazil', 1, 'Germany', 0, { winner: 'Brazil', round: 'semifinals' }),
+  event('Argentina', 1, 'France', 0, { winner: 'Argentina', round: 'semifinals' }),
+  event('Brazil', 1, 'Argentina', 0, { winner: 'Brazil', round: 'final' }),
+  event('Germany', 3, 'France', 2, { winner: 'Germany', round: '3rd-place-match' }),
+] }
+
+const incompleteFinalFourPayload = { events: [
+  event('Brazil', 0, 'Germany', 0, { completed: false, round: 'semifinals' }),
+  event('Argentina', 0, 'France', 0, { completed: false, round: 'semifinals' }),
+] }
+
+
+const tiedFinalFourPayload = { events: [
+  event('Brazil', 1, 'Germany', 0, { winner: 'Brazil', round: 'semifinals' }),
+  event('Argentina', 1, 'France', 0, { winner: 'Argentina', round: 'semifinals' }),
+  event('Brazil', 0, 'Argentina', 0, { completed: false, round: 'final' }),
+  event('Germany', 0, 'France', 0, { completed: false, round: '3rd-place-match' }),
+] }
+
+test('renders complete final four as official placements ahead of higher points', async ({ page }) => {
+  await mockEspn(page, finalFourPayload)
+  await page.goto('/')
+  await expect(page.getByRole('region', { name: 'Final Four official placements' })).toBeVisible()
+  await expect(page.getByRole('button', { name: /View Ryan H\., Brazil, World Cup champion/ }).locator('.placement-marker')).toHaveText('🥇')
+  await expect(page.getByRole('button', { name: /View Diego, Argentina, World Cup runner-up/ }).locator('.placement-marker')).toHaveText('🥈')
+  await expect(page.getByRole('button', { name: /View Ryan L\., Germany, Third-place winner/ }).locator('.placement-marker')).toHaveText('🥉')
+  await expect(page.getByRole('button', { name: /View Jeff, France, Fourth place/ }).locator('.placement-marker')).toHaveText('4')
+  await expect(page.locator('.final-four-team')).toHaveText(['🇧🇷Brazil', '🇦🇷Argentina', '🇩🇪Germany', '🇫🇷France'])
+  await expect(page.locator('.final-four-card .final-four-stats')).toHaveCount(0)
+  await expect(page.locator('.section-divider')).toContainText('Remaining standings')
+  await expect(page.locator('.table-body').last().locator('.team-name').first()).toHaveText('Mexico')
+  await expect(page.getByRole('button', { name: /View Ryan H\./ })).toHaveCount(1)
+})
+
+test('renders incomplete final four with neutral labels on mobile without overflow', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await mockEspn(page, incompleteFinalFourPayload)
+  await page.goto('/')
+  await expect(page.getByRole('region', { name: 'Final Four official placements' })).toBeVisible()
+  await expect(page.locator('.placement-pill')).toHaveText(['Final Four TBD', 'Final Four TBD', 'Final Four TBD', 'Final Four TBD'])
+  await expect(page.locator('.placement-marker').first()).toHaveText('TBD')
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
+})
+
+
+test('renders tied final-four placeholders before placement games finish on mobile', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await mockEspn(page, tiedFinalFourPayload)
+  await page.goto('/')
+  await expect(page.locator('.placement-marker')).toHaveText(['T-1', 'T-1', 'T-3', 'T-3'])
+  await expect(page.locator('.placement-pill')).toHaveText(['Tied for 1st', 'Tied for 1st', 'Tied for 3rd', 'Tied for 3rd'])
+  await expect(page.locator('.placement-marker')).not.toHaveText(['3', '4'])
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
+})
+
+
 test('social preview renders all current rows and eliminated styling', async ({ page }) => {
   await page.setViewportSize({ width: 1200, height: 630 })
   await mockEspn(page)

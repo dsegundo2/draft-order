@@ -1,18 +1,11 @@
 import { teamAssignments } from './teams'
 import type { GameInfo, ManagerStanding, ProgressStep } from '../types'
+import { eventGameState, getWorldCupFinalFourPlacements } from './worldCupPlacements'
+import type { EspnEvent } from './worldCupPlacements'
 
 export const SCOREBOARD_URL = 'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?limit=500&dates=20260628-20260719'
 const KNOCKOUT_ROUNDS = new Set(['round-of-32', 'round-of-16', 'quarterfinals', 'semifinals', '3rd-place-match', 'final'])
 const ROUND_NAMES: Record<string, string> = { 'round-of-32': 'Round of 32', 'round-of-16': 'Round of 16', quarterfinals: 'Quarterfinals', semifinals: 'Semifinals', '3rd-place-match': 'Third-place match', final: 'Final' }
-
-type EspnCompetitor = { winner?: boolean; score?: string; team?: { displayName?: string } }
-type EspnEvent = {
-  name?: string
-  date?: string
-  status?: { type?: { completed?: boolean; state?: string; name?: string; description?: string } }
-  competitions?: Array<{ date?: string; competitors?: EspnCompetitor[]; notes?: Array<{ headline?: string }> }>
-  season?: { slug?: string }
-}
 
 const PT_DATE = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Los_Angeles', year: 'numeric', month: '2-digit', day: '2-digit' })
 
@@ -22,14 +15,7 @@ export function isSamePacificDay(isoDate: string, now: Date): boolean {
 }
 
 function gameState(event: EspnEvent): GameInfo['state'] {
-  const type = event.status?.type
-  const words = `${type?.name ?? ''} ${type?.description ?? ''}`.toLowerCase()
-  if (words.includes('postpon')) return 'postponed'
-  if (words.includes('cancel')) return 'canceled'
-  if (type?.completed || type?.state === 'post') return 'final'
-  if (type?.state === 'in') return 'live'
-  if (type?.state === 'pre') return 'scheduled'
-  return 'unknown'
+  return eventGameState(event)
 }
 
 function parsedScore(value?: string): number | undefined {
@@ -151,8 +137,34 @@ export function buildStandings(events: EspnEvent[], now = new Date()): ManagerSt
     }
   }
 
-  return [...byTeam.values()].sort((a, b) => b.points - a.points || b.goalsFor - a.goalsFor || (b.population ?? -1) - (a.population ?? -1) || a.manager.localeCompare(b.manager))
+  const ranked = [...byTeam.values()].sort((a, b) => b.points - a.points || b.goalsFor - a.goalsFor || (b.population ?? -1) - (a.population ?? -1) || a.manager.localeCompare(b.manager))
+  const placements = getWorldCupFinalFourPlacements(events)
+  for (const standing of ranked) {
+    const placement = placements.get(standing.espnName.toLowerCase())
+    if (placement) standing.finalFourPlacement = { position: placement.position, label: placement.label, source: placement.source }
+  }
+  return ranked
 }
+
+export function splitFinalFourStandings(standings: ManagerStanding[]): { finalFour: ManagerStanding[]; remainingLeaderboard: ManagerStanding[] } {
+  const finalFour = standings
+    .filter((standing) => standing.finalFourPlacement)
+    .sort((a, b) => {
+      const rankOrder = (standing: ManagerStanding) => {
+        if (standing.finalFourPlacement?.position) return standing.finalFourPlacement.position
+        if (standing.finalFourPlacement?.source === 'final') return 1
+        if (standing.finalFourPlacement?.source === 'third-place') return 3
+        return 99
+      }
+      const aRank = rankOrder(a)
+      const bRank = rankOrder(b)
+      if (aRank !== bRank) return aRank - bRank
+      return standings.indexOf(a) - standings.indexOf(b)
+    })
+  const finalFourTeams = new Set(finalFour.map((standing) => standing.manager))
+  return { finalFour, remainingLeaderboard: standings.filter((standing) => !finalFourTeams.has(standing.manager)) }
+}
+
 
 export async function fetchStandings(signal?: AbortSignal): Promise<ManagerStanding[]> {
   const response = await fetch(SCOREBOARD_URL, { signal })
