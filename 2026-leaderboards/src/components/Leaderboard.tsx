@@ -1,6 +1,8 @@
 import type { ManagerStanding } from '../types'
 import { splitFinalFourStandings } from '../data/espn'
 import { gameSummary } from './gameDisplay'
+import { FANTASY_RANKINGS_SOURCE, NFL_TEAM_LOGO_SOURCE, fantasyRankingForPick } from '../data/fantasyRankings'
+import type { FantasyRanking } from '../data/fantasyRankings'
 
 type Props = {
   standings: ManagerStanding[]
@@ -10,17 +12,34 @@ type Props = {
 type RowProps = {
   standing: ManagerStanding
   rankLabel: string | number
+  projectedPick?: FantasyRanking
   onSelect: (standing: ManagerStanding) => void
+}
+
+
+function ProjectedPick({ ranking, className = 'projected-pick', label }: { ranking?: FantasyRanking; className?: string; label?: string }) {
+  if (!ranking) return <span className={className} aria-hidden="true">—</span>
+  return (
+    <span className={className}>
+      {label ? <span className="data-label">{label}</span> : null}
+      <span className="projected-pick-main">
+        <img className="nfl-team-logo" src={ranking.teamLogoUrl} alt={`${ranking.team} logo`} loading="lazy" />
+        <b>{ranking.player}</b>
+      </span>
+      <small>{ranking.team} {ranking.positionRank}</small>
+    </span>
+  )
 }
 
 const placementIcon: Record<number, string> = { 1: '🥇', 2: '🥈', 3: '🥉', 4: '4' }
 const placementClass: Record<number, string> = { 1: 'gold', 2: 'silver', 3: 'bronze', 4: 'fourth' }
 
-function StandingRow({ standing, rankLabel, onSelect }: RowProps) {
+function StandingRow({ standing, rankLabel, projectedPick, onSelect }: RowProps) {
+  const upcoming = standing.gameToday ?? (!standing.eliminated ? standing.nextGame : undefined)
   const rowClass = [
     standing.eliminated ? 'is-eliminated' : '',
     standing.gameToday && ['scheduled', 'live'].includes(standing.gameToday.state) ? 'has-game-today' : '',
-    standing.gameToday || standing.nextGame && !standing.eliminated ? 'has-match' : '',
+    upcoming ? 'has-match' : '',
   ].filter(Boolean).join(' ')
   return (
     <li className={rowClass}>
@@ -38,10 +57,8 @@ function StandingRow({ standing, rankLabel, onSelect }: RowProps) {
           <span className="team-name">{standing.team}</span>
           </small>
         </span>
-        {standing.gameToday ? <span className="opponent today-match">vs {standing.gameToday.opponent}</span>
-          : standing.nextGame && !standing.eliminated ? <span className="opponent next-match">vs {standing.nextGame.opponent}</span> : <span className="opponent" />}
-        {standing.gameToday ? <time className="when today-match">{gameSummary(standing.gameToday)}</time>
-          : standing.nextGame && !standing.eliminated ? <time className="when next-match">{gameSummary(standing.nextGame)}</time> : <span className="when" />}
+        <ProjectedPick ranking={projectedPick} />
+        {upcoming ? <span className={standing.gameToday ? 'row-game today-match' : 'row-game next-match'}>vs {upcoming.opponent} · {gameSummary(upcoming)}</span> : null}
         <strong className="points">{standing.points}</strong>
         <span className="wins">{standing.wins}</span>
         <span className="goals">{standing.goalsFor}</span>
@@ -51,32 +68,31 @@ function StandingRow({ standing, rankLabel, onSelect }: RowProps) {
 }
 
 
-function finalFourMatchSummary(standing: ManagerStanding): { opponent: string; when: string; live: boolean } | undefined {
-  const game = standing.gameToday ?? standing.nextGame
-  if (game) return { opponent: `vs ${game.opponent}`, when: gameSummary(game), live: game.state === 'live' || game.state === 'final' }
-
-  const placement = standing.finalFourPlacement
-  const decidingRound = placement?.source === 'final' ? 'Final' : placement?.source === 'third-place' ? 'Third-place match' : undefined
-  const completedStep = decidingRound ? standing.progress.find((step) => step.complete && step.round === decidingRound) : undefined
-  if (completedStep) return { opponent: `vs ${completedStep.opponent}`, when: `${completedStep.round} ${completedStep.result ?? ''}`.trim(), live: true }
-
-  const latestStep = [...standing.progress].reverse().find((step) => step.complete)
-  if (latestStep) return { opponent: `vs ${latestStep.opponent}`, when: latestStep.round, live: false }
-  return undefined
+function finalFourMatchLabel(source: NonNullable<ManagerStanding['finalFourPlacement']>['source']) {
+  if (source === 'final') return 'Final game'
+  if (source === 'third-place') return 'Third-place game'
+  return 'Next game'
 }
 
-function FinalFourCard({ standing, onSelect }: { standing: ManagerStanding; onSelect: (standing: ManagerStanding) => void }) {
+function finalFourMatchSummary(standing: ManagerStanding): { opponent: string; when: string; live: boolean } | undefined {
+  const game = standing.gameToday ?? standing.nextGame
+  if (!game) return undefined
+  return { opponent: `vs ${game.opponent}`, when: gameSummary(game), live: game.state === 'live' || game.state === 'final' }
+}
+
+function FinalFourCard({ standing, projectedPick, onSelect }: { standing: ManagerStanding; projectedPick?: FantasyRanking; onSelect: (standing: ManagerStanding) => void }) {
   const placement = standing.finalFourPlacement!
   const position = placement.position
-  const marker = position ? placementIcon[position] : placement.source === 'final' ? 'T-1' : placement.source === 'third-place' ? 'T-3' : 'TBD'
-  const placementClassName = position ? `placement-${placementClass[position]}` : 'placement-pending'
+  const marker = position ? placementIcon[position] : placement.source === 'final' ? '1' : placement.source === 'third-place' ? '3' : 'TBD'
+  const placementClassName = position ? `placement-${placementClass[position]}` : placement.source === 'final' ? 'placement-gold' : placement.source === 'third-place' ? 'placement-bronze' : 'placement-pending'
+  const showPlacementPill = Boolean(position) || placement.source === 'semifinal'
   const match = finalFourMatchSummary(standing)
 
   return (
     <li className={`final-four-item ${placementClassName}`}>
       <button
         type="button"
-        className="final-four-card"
+        className={match ? 'final-four-card has-match' : 'final-four-card'}
         onClick={() => onSelect(standing)}
         aria-label={`View ${standing.manager}, ${standing.team}, ${placement.label}, ${standing.points} points`}
       >
@@ -85,10 +101,9 @@ function FinalFourCard({ standing, onSelect }: { standing: ManagerStanding; onSe
           <span className="final-four-manager">{standing.manager}</span>
           <span className="final-four-team"><span className="flag" role="img" aria-label={`${standing.team} flag`}>{standing.flag}</span>{standing.team}</span>
         </span>
-        <span className="placement-pill">{placement.label}</span>
-        <span className="final-four-match">
-          {match ? <><span>{match.opponent}</span><time className={match.live ? 'today-match' : ''}>{match.when}</time></> : <><span>Match TBD</span><time>Placement pending</time></>}
-        </span>
+        {showPlacementPill ? <span className="placement-pill">{placement.label}</span> : null}
+        {match ? <span className="final-four-match"><span className="data-label">{finalFourMatchLabel(placement.source)}</span><span>{match.opponent}</span><time className={match.live ? 'today-match' : ''}>{match.when}</time></span> : null}
+        {projectedPick ? <ProjectedPick ranking={projectedPick} className="final-four-pick" label="Projected pick" /> : null}
       </button>
     </li>
   )
@@ -109,19 +124,19 @@ export function Leaderboard({ standings, onSelect }: Props) {
             </div>
           </div>
           <ol className="final-four-list">
-            {finalFour.map((standing) => (
-              <FinalFourCard key={standing.manager} standing={standing} onSelect={onSelect} />
+            {finalFour.map((standing, index) => (
+              <FinalFourCard key={standing.manager} standing={standing} projectedPick={fantasyRankingForPick(index + 1)} onSelect={onSelect} />
             ))}
           </ol>
           <div className="section-divider" role="separator"><span>Remaining standings</span></div>
         </section>
       ) : null}
       <div className="table-head" aria-hidden="true">
-        <span className="rank">#</span><span className="player">Player</span><span className="opponent">Opponent</span><span className="when">When</span><span className="points">Pts</span><span className="wins">W</span><span className="goals" title="Goals for">G</span>
+        <span className="rank">#</span><span className="player">Player</span><span className="projected-pick">Projected Pick</span><span className="points">Pts</span><span className="wins">W</span><span className="goals" title="Goals for">G</span>
       </div>
       <ol className="table-body">
         {remainingLeaderboard.map((standing, index) => (
-          <StandingRow key={standing.manager} standing={standing} rankLabel={hasFinalFour ? index + finalFour.length + 1 : index + 1} onSelect={onSelect} />
+          <StandingRow key={standing.manager} standing={standing} rankLabel={hasFinalFour ? index + finalFour.length + 1 : index + 1} projectedPick={fantasyRankingForPick(hasFinalFour ? index + finalFour.length + 1 : index + 1)} onSelect={onSelect} />
         ))}
       </ol>
       <div className="legend" aria-label="Status legend">
@@ -129,6 +144,7 @@ export function Leaderboard({ standings, onSelect }: Props) {
         <span><i className="status-dot eliminated" />Eliminated</span>
         {hasFinalFour ? <span><i className="status-dot final-four" />Final Four official placement</span> : null}
       </div>
+      <p className="ranking-source">Projected-pick labels are based on <a href={FANTASY_RANKINGS_SOURCE.url} target="_blank" rel="noreferrer">{FANTASY_RANKINGS_SOURCE.label}</a> · PPR overall · updated {FANTASY_RANKINGS_SOURCE.updated}. They are not actual picks, keepers, or draft predictions. Team logos use <a href={NFL_TEAM_LOGO_SOURCE.url} target="_blank" rel="noreferrer">{NFL_TEAM_LOGO_SOURCE.label}</a>.</p>
     </section>
   )
 }

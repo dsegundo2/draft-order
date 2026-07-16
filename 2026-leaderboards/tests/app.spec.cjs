@@ -77,7 +77,7 @@ test('refresh recalculates live goals and half-points from the latest score', as
   const updatedFrance = page.getByRole('button', { name: /View Jeff, France, 1 points/ })
   await expect(updatedFrance).toBeVisible()
   await expect(updatedFrance.locator('.goals')).toHaveText('2')
-  await expect(updatedFrance.locator('.when.today-match')).toHaveText('Live 2–0')
+  await expect(updatedFrance.locator('.row-game.today-match')).toHaveText('vs Sweden · Live 2–0')
 })
 
 test('shows an honest error with no fake standings when ESPN fails, then retries', async ({ page }) => {
@@ -161,22 +161,18 @@ test('long future game metadata stays contained on narrow mobile', async ({ page
     ] }],
   }] })
   await page.goto('/')
-  const opponent = page.locator('.opponent.next-match').first()
-  const when = page.locator('.when.next-match').first()
-  await expect(opponent).toHaveText('vs Bosnia and Herzegovina')
-  await expect(when).toHaveText('Fri, Jul 10 · 4:30 PM PT')
-  const containment = await opponent.evaluate((element) => {
+  const gameInfo = page.locator('.row-game.next-match').first()
+  await expect(gameInfo).toHaveText('vs Bosnia and Herzegovina · Fri, Jul 10 · 4:30 PM PT')
+  const containment = await gameInfo.evaluate((element) => {
     const row = element.closest('.row')
     const playerBox = row.querySelector('.player').getBoundingClientRect()
-    const opponentBox = element.getBoundingClientRect()
-    const whenBox = row.querySelector('.when').getBoundingClientRect()
+    const gameBox = element.getBoundingClientRect()
     return {
-      opponentContained: opponentBox.left >= playerBox.left && opponentBox.right <= playerBox.right,
-      whenContained: whenBox.left >= playerBox.left && whenBox.right <= playerBox.right,
+      gameInfoContained: gameBox.left >= playerBox.left && gameBox.right <= playerBox.right,
       contentFits: row.scrollHeight <= row.clientHeight,
     }
   })
-  expect(containment).toEqual({ opponentContained: true, whenContained: true, contentFits: true })
+  expect(containment).toEqual({ gameInfoContained: true, contentFits: true })
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
 })
 
@@ -233,9 +229,9 @@ test('renders tied final-four placeholders before placement games finish on mobi
   await page.setViewportSize({ width: 390, height: 844 })
   await mockEspn(page, tiedFinalFourPayload)
   await page.goto('/')
-  await expect(page.locator('.placement-marker')).toHaveText(['T-1', 'T-1', 'T-3', 'T-3'])
-  await expect(page.locator('.placement-pill')).toHaveText(['Tied for 1st', 'Tied for 1st', 'Tied for 3rd', 'Tied for 3rd'])
-  await expect(page.locator('.placement-marker')).not.toHaveText(['3', '4'])
+  await expect(page.locator('.placement-marker')).toHaveText(['1', '1', '3', '3'])
+  await expect(page.locator('.placement-pill')).toHaveCount(0)
+  await expect(page.locator('.placement-marker')).not.toHaveText(['T-1', 'T-1', 'T-3', 'T-3'])
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
 })
 
