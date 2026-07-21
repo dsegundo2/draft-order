@@ -1,8 +1,8 @@
 import type { ManagerStanding } from '../types'
 import { splitFinalFourStandings } from '../data/espn'
 import { gameSummary } from './gameDisplay'
-import { FANTASY_RANKINGS_SOURCE, NFL_TEAM_LOGO_SOURCE, fantasyRankingForPick } from '../data/fantasyRankings'
-import type { FantasyRanking } from '../data/fantasyRankings'
+import { ADJUSTED_RANKINGS_SOURCE, NFL_TEAM_LOGO_SOURCE, adjustedRankingForPick } from '../data/adjustedRankings'
+import type { AdjustedRanking } from '../data/adjustedRankings'
 
 type Props = {
   standings: ManagerStanding[]
@@ -12,17 +12,17 @@ type Props = {
 type RowProps = {
   standing: ManagerStanding
   rankLabel: string | number
-  projectedPick?: FantasyRanking
+  adjustedRanking?: AdjustedRanking
   onSelect: (standing: ManagerStanding) => void
 }
 
 
-function ProjectedPick({ ranking, className = 'projected-pick', label }: { ranking?: FantasyRanking; className?: string; label?: string }) {
+function AdjustedRanking({ ranking, className = 'adjusted-ranking', label }: { ranking?: AdjustedRanking; className?: string; label?: string }) {
   if (!ranking) return <span className={className} aria-hidden="true">—</span>
   return (
     <span className={className}>
       {label ? <span className="data-label">{label}</span> : null}
-      <span className="projected-pick-main">
+      <span className="adjusted-ranking-main">
         <img className="nfl-team-logo" src={ranking.teamLogoUrl} alt={`${ranking.team} logo`} loading="lazy" />
         <b>{ranking.player}</b>
       </span>
@@ -34,7 +34,7 @@ function ProjectedPick({ ranking, className = 'projected-pick', label }: { ranki
 const placementIcon: Record<number, string> = { 1: '🥇', 2: '🥈', 3: '🥉', 4: '4' }
 const placementClass: Record<number, string> = { 1: 'gold', 2: 'silver', 3: 'bronze', 4: 'fourth' }
 
-function StandingRow({ standing, rankLabel, projectedPick, onSelect }: RowProps) {
+function StandingRow({ standing, rankLabel, adjustedRanking, onSelect }: RowProps) {
   const upcoming = standing.gameToday ?? (!standing.eliminated ? standing.nextGame : undefined)
   const rowClass = [
     standing.eliminated ? 'is-eliminated' : '',
@@ -57,7 +57,7 @@ function StandingRow({ standing, rankLabel, projectedPick, onSelect }: RowProps)
           <span className="team-name">{standing.team}</span>
           </small>
         </span>
-        <ProjectedPick ranking={projectedPick} />
+        <AdjustedRanking ranking={adjustedRanking} />
         {upcoming ? <span className={standing.gameToday ? 'row-game today-match' : 'row-game next-match'}>vs {upcoming.opponent} · {gameSummary(upcoming)}</span> : null}
         <strong className="points">{standing.points}</strong>
         <span className="wins">{standing.wins}</span>
@@ -80,7 +80,7 @@ function finalFourMatchSummary(standing: ManagerStanding): { opponent: string; w
   return { opponent: `vs ${game.opponent}`, when: gameSummary(game), live: game.state === 'live' || game.state === 'final' }
 }
 
-function FinalFourCard({ standing, projectedPick, onSelect }: { standing: ManagerStanding; projectedPick?: FantasyRanking; onSelect: (standing: ManagerStanding) => void }) {
+function FinalFourCard({ standing, adjustedRanking, onSelect }: { standing: ManagerStanding; adjustedRanking?: AdjustedRanking; onSelect: (standing: ManagerStanding) => void }) {
   const placement = standing.finalFourPlacement!
   const position = placement.position
   const marker = position ? placementIcon[position] : placement.source === 'final' ? '1' : placement.source === 'third-place' ? '3' : 'TBD'
@@ -103,7 +103,7 @@ function FinalFourCard({ standing, projectedPick, onSelect }: { standing: Manage
         </span>
         {showPlacementPill ? <span className="placement-pill">{placement.label}</span> : null}
         {match ? <span className="final-four-match"><span className="data-label">{finalFourMatchLabel(placement.source)}</span><span>{match.opponent}</span><time className={match.live ? 'today-match' : ''}>{match.when}</time></span> : null}
-        {projectedPick ? <ProjectedPick ranking={projectedPick} className="final-four-pick" label="Projected pick" /> : null}
+        {adjustedRanking ? <AdjustedRanking ranking={adjustedRanking} className="final-four-adjusted-ranking" label="Adjusted ranking" /> : null}
       </button>
     </li>
   )
@@ -125,18 +125,18 @@ export function Leaderboard({ standings, onSelect }: Props) {
           </div>
           <ol className="final-four-list">
             {finalFour.map((standing, index) => (
-              <FinalFourCard key={standing.manager} standing={standing} projectedPick={fantasyRankingForPick(index + 1)} onSelect={onSelect} />
+              <FinalFourCard key={standing.manager} standing={standing} adjustedRanking={adjustedRankingForPick(index + 1)} onSelect={onSelect} />
             ))}
           </ol>
           <div className="section-divider" role="separator"><span>Remaining standings</span></div>
         </section>
       ) : null}
       <div className="table-head" aria-hidden="true">
-        <span className="rank">#</span><span className="player">Player</span><span className="projected-pick">Projected Pick</span><span className="points">Pts</span><span className="wins">W</span><span className="goals" title="Goals for">G</span>
+        <span className="rank">#</span><span className="player">Player</span><span className="adjusted-ranking">Adjusted Ranking</span><span className="points">Pts</span><span className="wins">W</span><span className="goals" title="Goals for">G</span>
       </div>
       <ol className="table-body">
         {remainingLeaderboard.map((standing, index) => (
-          <StandingRow key={standing.manager} standing={standing} rankLabel={hasFinalFour ? index + finalFour.length + 1 : index + 1} projectedPick={fantasyRankingForPick(hasFinalFour ? index + finalFour.length + 1 : index + 1)} onSelect={onSelect} />
+          <StandingRow key={standing.manager} standing={standing} rankLabel={hasFinalFour ? index + finalFour.length + 1 : index + 1} adjustedRanking={adjustedRankingForPick(hasFinalFour ? index + finalFour.length + 1 : index + 1)} onSelect={onSelect} />
         ))}
       </ol>
       <div className="legend" aria-label="Status legend">
@@ -144,7 +144,7 @@ export function Leaderboard({ standings, onSelect }: Props) {
         <span><i className="status-dot eliminated" />Eliminated</span>
         {hasFinalFour ? <span><i className="status-dot final-four" />Final Four official placement</span> : null}
       </div>
-      <p className="ranking-source">Projected-pick labels are based on <a href={FANTASY_RANKINGS_SOURCE.url} target="_blank" rel="noreferrer">{FANTASY_RANKINGS_SOURCE.label}</a> · PPR overall · updated {FANTASY_RANKINGS_SOURCE.updated}. They are not actual picks, keepers, or draft predictions. Team logos use <a href={NFL_TEAM_LOGO_SOURCE.url} target="_blank" rel="noreferrer">{NFL_TEAM_LOGO_SOURCE.label}</a>.</p>
+      <p className="ranking-source">Adjusted rankings are based on <a href={ADJUSTED_RANKINGS_SOURCE.url} target="_blank" rel="noreferrer">{ADJUSTED_RANKINGS_SOURCE.label}</a> · half-PPR overall · updated {ADJUSTED_RANKINGS_SOURCE.updated}. They are not actual picks, keepers, or draft predictions. Team logos use <a href={NFL_TEAM_LOGO_SOURCE.url} target="_blank" rel="noreferrer">{NFL_TEAM_LOGO_SOURCE.label}</a>.</p>
     </section>
   )
 }
